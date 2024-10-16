@@ -32,7 +32,7 @@ async function start() {
         }
     });
     try {
-        await server.listen({ port: 3000 });
+        await server.listen({ host: '0.0.0.0', port: 3000 });
     }
     catch (err) {
         server.log.error(err);

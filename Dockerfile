@@ -1,0 +1,49 @@
+#
+# IMAGE: build server
+#
+FROM node:20.18.0-alpine3.20 AS build-server
+LABEL stage=build
+
+# install build dependencies
+WORKDIR /opt/geo-conversion-api/server
+COPY ./server/package*.json ./
+RUN npm ci
+
+# copy src files, build (transpile) server
+COPY ./server .
+RUN npm run build
+
+
+#
+# IMAGE: init
+#
+FROM building5/dumb-init:1.2.1 AS init
+
+
+#
+# IMAGE: final
+#
+FROM node:20.18.0-alpine3.20 AS final
+
+# copy init
+COPY --from=init /dumb-init /usr/local/bin/
+
+# install production dependencies
+WORKDIR /opt/geo-conversion-api/server
+COPY --chown=node:node ./server/package*.json ./
+RUN npm run install-production
+
+# copy built files from server and client
+WORKDIR /opt/geo-conversion-api
+COPY --chown=node:node --from=build-server /opt/geo-conversion-api/server/dist ./server
+
+# remove this line
+COPY --chown=node:node config.json .
+
+EXPOSE 3000
+
+USER node
+
+WORKDIR /opt/geo-conversion-api/server
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "server.js"]
