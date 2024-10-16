@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "This API converts geometry information from and to various formats.",
   "scripts": {
+    "build": "tsc -p ./tsconfig.build.json",
+    "postbuild": "copyfiles api/**/*.json dist",
+    "install-production": "NODE_ENV=production npm ci",
     "dev": "ts-node-dev server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -36,6 +39,7 @@
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.11.30",
     "@types/terraformer__wkt": "^2.0.3",
+    "copyfiles": "^2.4.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.6.3"
   }
