@@ -2,8 +2,8 @@
   "name": "geo-conversion-api",
   "version": "0.0.1",
   "description": "This API converts geometry information from and to various formats.",
-  "main": "index.js",
   "scripts": {
+    "dev": "ts-node-dev server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -14,5 +14,29 @@
     "conversion"
   ],
   "author": "Erik-Lân Do Dinh",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/autoload": "^6.0.2",
+    "@sinclair/typebox": "^0.33.16",
+    "@terraformer/wkt": "^2.2.1",
+    "@turf/bbox": "^7.1.0",
+    "@turf/bbox-polygon": "^7.1.0",
+    "@turf/centroid": "^7.1.0",
+    "@turf/helpers": "^7.1.0",
+    "@turf/rewind": "^7.1.0",
+    "@xmldom/xmldom": "^0.9.4",
+    "deep-equal": "^2.2.3",
+    "fastify": "^5.0.0",
+    "geojson-to-gml-3": "^2.0.2",
+    "proj4": "^2.12.1",
+    "read-config-ng": "^3.0.7",
+    "xpath": "^0.0.34"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
+    "@types/node": "^20.11.30",
+    "@types/terraformer__wkt": "^2.0.3",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.6.3"
+  }
 }

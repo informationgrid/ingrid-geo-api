@@ -1,0 +1,11 @@
+{
+  "server": {
+    "baseUrl": "%{API_BASE_URL|/}",
+    "versions": ["v1"],
+    "build": {
+      "version": "%{BUILD_VERSION|unavailable}",
+      "date": "%{BUILD_DATE|unavailable}",
+      "commit_id": "%{BUILD_COMMIT_ID|unavailable}"
+    }
+  }
+}

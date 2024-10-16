@@ -1,0 +1,1 @@
+declare module 'geojson-to-gml-3';
