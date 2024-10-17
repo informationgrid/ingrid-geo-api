@@ -1,31 +1,12 @@
-import { bbox, centroid, convert, GeoFormat } from './geoConverter';
-import { FastifyInstance, RouteShorthandOptions } from 'fastify';
-import { Static, Type } from '@sinclair/typebox';
-
-// export const ConversionQuery = Type.Object({
-//   name: Type.String(),
-//   mail: Type.Optional(Type.String({ format: 'email' })),
-// })
-
-// export type ConversionQueryType = Static<typeof ConversionQuery>;
-
-// const opts: RouteShorthandOptions = {
-//     schema: {
-//         // querystring: ConversionQuery
-//     }
-// };
-
-const formats = {
-    'geojson': 'text/json',
-    'gml': 'application/gml+xml',
-    'wkt': 'text/plain'
-};
-const modes = ['bbox', 'centroid', 'full'];
+import { bbox, centroid, convert } from './geoConverter';
+import { FastifyInstance } from 'fastify';
+import { ConversionMode, FORMATS, GeoFormat, MODES } from './types';
+import { throwHttpError } from '../../../../utils';
 
 interface ConversionQuery {
     exportCRS: string,
     exportFormat: GeoFormat,
-    mode: 'bbox' | 'centroid' | 'full'
+    mode: ConversionMode
 }
 
 export default async (server: FastifyInstance, options: any) => {
@@ -33,35 +14,42 @@ export default async (server: FastifyInstance, options: any) => {
         let replyBody;
         try {
             let exportFormat: GeoFormat = request.query.exportFormat;
-            if (!Object.keys(formats).includes(exportFormat)) {
-                return reply.status(400).send(`Parameter "exportFormat" must be one of ${Object.keys(formats)}`);
+            if (!Object.keys(FORMATS).includes(exportFormat)) {
+                throwHttpError(400, `Parameter "exportFormat" must be one of ${Object.keys(FORMATS)}`);
             }
 
-            let mode = request.query.mode ?? 'full';
-            if (!modes.includes(mode)) {
-                return reply.status(400).send(`Parameter "mode" must be one of ${modes}`);
+            let mode: ConversionMode = request.query.mode ?? 'full';
+            if (!MODES.includes(mode)) {
+                throwHttpError(400, `Parameter "mode" must be one of ${MODES}`);
             }
+
+            let body = request.body as string;
 
             // set content-type
-            reply = reply.header('Content-Type', formats[exportFormat]);
+            reply = reply.header('Content-Type', FORMATS[exportFormat]);
 
             // create response
             switch (mode) {
                 case 'full':
-                    replyBody = convert(request.body, exportFormat, request.query.exportCRS);
+                    replyBody = convert(body, exportFormat, request.query.exportCRS);
                     break;
                 case 'centroid':
-                    replyBody = centroid(request.body, exportFormat);
+                    replyBody = centroid(body, exportFormat);
                     break;
                 case 'bbox':
-                    replyBody = bbox(request.body, exportFormat);
+                    replyBody = bbox(body, exportFormat);
                     break;
             }
         }
         catch (e) {
-            // e.message;
-            reply.status(500);
-            replyBody = e;
+            if (e instanceof Error) {
+                reply.status(e.cause as number);
+                replyBody = e.message;
+            }
+            else {
+                reply.status(500);
+                replyBody = String(e);
+            }
         }
 
         return reply.send(replyBody);

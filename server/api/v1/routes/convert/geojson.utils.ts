@@ -1,27 +1,4 @@
 /*
- * ==================================================
- * ingrid-harvester
- * ==================================================
- * Copyright (C) 2017 - 2024 wemove digital solutions GmbH
- * ==================================================
- * Licensed under the EUPL, Version 1.2 or - as soon they will be
- * approved by the European Commission - subsequent versions of the
- * EUPL (the "Licence");
- *
- * You may not use this work except in compliance with the Licence.
- * You may obtain a copy of the Licence at:
- *
- * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the Licence is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the Licence for the specific language governing permissions and
- * limitations under the Licence.
- * ==================================================
- */
-
-/*
  * Copyright (c) 2018, parse-gml-polygon authors
  *
  * Permission to use, copy, modify, and/or distribute this software for any
@@ -38,20 +15,12 @@
  */
 
 import * as xpath from 'xpath';
-// import * as MiscUtils from './misc.utils';
 import bbox from '@turf/bbox';
 import bboxPolygon from '@turf/bbox-polygon';
-// import booleanWithin from '@turf/boolean-within';
-// import buffer from '@turf/buffer';
 import centroid from '@turf/centroid';
-// import combine from '@turf/combine';
-// import flatten from '@turf/flatten';
-// const turfFlatten = require('@turf/flatten');
-// import flip from '@turf/flip';
 import rewind from '@turf/rewind';
-// import simplify from '@turf/simplify';
-// import { Feature, FeatureCollection, GeometryCollection, MultiPoint, MultiLineString, MultiPolygon, Point } from 'geojson';
 import { AllGeoJSON } from '@turf/helpers';
+import { Geometry, GeometryCollection, Point, Polygon } from 'geojson';
 
 const deepEqual = require('deep-equal');
 
@@ -69,20 +38,7 @@ export function convert(geojson: any, exportCRS: string) {
     return geojson;
 }
 
-/**
- * Bounding box around Germany (+ 50km buffer zone for leniency)
- */
-// const BBOX_GERMANY = buffer({
-//     'type': 'Polygon',
-//     'coordinates': [[
-//         [5.98865807458, 54.983104153], 
-//         [5.98865807458, 47.3024876979],
-//         [15.0169958839, 47.3024876979],
-//         [15.0169958839, 54.983104153],
-//         [5.98865807458, 54.983104153]]]
-// }, 50, {units: 'kilometers'});
-
-export function getBbox(spatial: AllGeoJSON) {//}: Geometry {
+export function getBbox(spatial: AllGeoJSON): Point | Polygon | undefined {
     if (!spatial) {
         return undefined;
     }
@@ -91,48 +47,6 @@ export function getBbox(spatial: AllGeoJSON) {//}: Geometry {
     }
     return bboxPolygon(bbox(spatial))?.geometry;
 }
-
-// export function within(spatial: number[] | Point | Geometry | GeometryCollection, bbox: Geometry): boolean {
-//     if (!spatial) {
-//         return undefined;
-//     }
-//     if ('type' in spatial) {
-//         if ('coordinates' in spatial) {
-//             return booleanWithin(spatial, bbox);
-//         }
-//         else if ('geometries' in spatial) {
-//             return spatial.geometries.every(subGeom => within(subGeom, bbox));
-//         }
-//         else {
-//             // TODO log unexpected input
-//             return undefined;
-//         }
-//     }
-//     else {
-//         return booleanWithin({ type: 'Point', coordinates: spatial }, bbox);
-//     }
-// }
-
-// export function flip<T>(spatial: number[] | Point | Geometry | GeometryCollection): T {
-//     if (!spatial) {
-//         return undefined;
-//     }
-//     if ('type' in spatial) {
-//         if ('coordinates' in spatial) {
-//             return flip(spatial);
-//         }
-//         else if ('geometries' in spatial) {
-//             return <T>{ ...spatial, geometries: spatial.geometries.map<Geometry>(geom => flip<Geometry>(geom)) };
-//         }
-//         else {
-//             // TODO log unexpected input
-//             return undefined;
-//         }
-//     }
-//     else {
-//         return flip({ type: 'Point', coordinates: spatial });
-//     }
-// }
 
 // export function getCentroid(spatial: Geometry | GeometryCollection): Point {
 //     if (!spatial) {
@@ -147,99 +61,6 @@ export function getBbox(spatial: AllGeoJSON) {//}: Geometry {
 //         (<GeometryCollection>modifiedSpatial).geometries.filter((geometry: AllGeoJSON) => geometry.type == 'Envelope').forEach((geometry: AllGeoJSON) => geometry.type = 'LineString');
 //     }
 //     return centroid(modifiedSpatial)?.geometry;
-// }
-
-// export function flatten(geometryCollection: GeometryCollection, tolerance: number): MultiLineString | MultiPoint | MultiPolygon | GeometryCollection {
-//     let flattened = turfFlatten(geometryCollection);
-//     let combined = combine(flattened);
-//     if (combined.features.length == 1) {
-//         let geometry = (<Feature<MultiLineString | MultiPoint | MultiPolygon>>combined.features[0]).geometry;
-//         if (tolerance > 0) {
-//             let simplified = simplify(geometry, { tolerance, highQuality: true, mutate: false });
-//             return simplified;
-//         }
-//         return geometry;
-//     }
-//     return geometryCollection;
-// }
-
-// /**
-//  * Check if the centroid of the given geometry is within Germany. If not, flip the geometry and check again.
-//  * 
-//  * @param spatial 
-//  * @returns spatial if centroid within Germany; flipped spatial if flipped centroid within Germany; null else
-//  */
-// export function sanitize(spatial: Geometry | GeometryCollection): Geometry | GeometryCollection {
-//     if (!spatial) {
-//         return undefined;
-//     }
-//     // check centroid
-//     let centroid = getCentroid(spatial);
-//     if (!within(centroid, BBOX_GERMANY)) {
-//         // if not, try to swap lat and lon
-//         let flippedCentroid = flip<Geometry | GeometryCollection>(centroid);
-//         if (within(flippedCentroid, BBOX_GERMANY)) {
-//             return flip<Geometry | GeometryCollection>(spatial);
-//         }
-//         return null;
-//     }
-//     return spatial;
-// }
-
-// export function transformCollection(featureCollection: FeatureCollection) {
-//     let geometryCollection = {
-//         type: 'GeometryCollection' as 'GeometryCollection',
-//         geometries: featureCollection.features.filter(Boolean).map(feature => feature.geometry)
-//     };
-//     return geometryCollection;
-// }
-
-// /**
-//  * Forked from https://github.com/DoFabien/proj-geojson
-//  * under MIT license
-//  * 
-//  * @param spatial 
-//  * @param targetSystem 
-//  */
-// export function projectFeatureCollection(featureCollection: FeatureCollection, sourceCrs: string) {
-//     // Point
-//     const projectPoint = transformer(sourceCrs);
-
-//     // Linestring, MultiPoint?
-//     const projectRing = (points: any[]) => points.map(point => projectPoint(...point));
-    
-//     // MultiLinestring, Polygon
-//     const projectRings = (rings) => rings.map(ring => projectRing(ring));
-
-//     // MultiPolygon
-//     const projectMultiRings = (multiRings) => multiRings.map(multiRing => projectRings(multiRing));
-
-//     const projectFeature = (feature) => {
-//         switch (feature?.geometry?.type) {
-//             case 'Point':
-//                 feature.geometry.coordinates = projectPoint(...feature.geometry.coordinates);
-//                 break;
-//             case 'MultiPoint':
-//             case 'LineString':
-//                 feature.geometry.coordinates = projectRing(feature.geometry.coordinates);
-//                 break;
-//             case 'MultiLineString':
-//             case 'Polygon':
-//                 feature.geometry.coordinates = projectRings(feature.geometry.coordinates);
-//                 break;
-//             case 'MultiPolygon':
-//                 feature.geometry.coordinates = projectMultiRings(feature.geometry.coordinates);
-//                 break;
-
-//             default:
-//                 return null;
-//         }
-//         return feature;
-//     };
-
-//     let projectedFeatureCollection = MiscUtils.structuredClone(featureCollection);
-//     projectedFeatureCollection.features = featureCollection.features.map(feature => projectFeature(feature));
-//     return projectedFeatureCollection;
 // }
 
 export function getBoundingBox(lowerCorner: string, upperCorner: string, crs?: string) {
@@ -267,7 +88,8 @@ export function getBoundingBox(lowerCorner: string, upperCorner: string, crs?: s
     }
 }
 
-export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ name: string ]: string; }) {//}: Geometries {
+// @ts-ignore despite what TS says, function does NOT lack return statement
+export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ name: string ]: string; }): Geometry | null {
     if (_ == null) {
         return null;
     }
@@ -496,13 +318,6 @@ export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ na
     };
 
     const parseMultiSurface = (_: Node, opts: ParseOptions, ctx: Context = {}) => {
-        // let el = _;
-
-        // const surfaceMembers = findIn(_, 'gml:LinearRing');
-        // if (surfaceMembers) {
-        //     el = surfaceMembers;
-        // }
-
         const polygons: number[][][][] = [];
         Object.values(select('.//gml:Surface|.//gml:surfaceMember', _)).forEach((c: Element) => {
             if (c.nodeName === 'gml:Surface') {
@@ -550,7 +365,7 @@ export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ na
                 return rewind({
                     type: 'LineString',
                     coordinates: parseLinearRingOrLineString(_, opts, childCtx)
-                });
+                }) as Geometry;
             case 'gml:MultiCurve':
                 return {
                     type: 'MultiLineString',
@@ -562,17 +377,17 @@ export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ na
                 return rewind({
                     type: 'Polygon',
                     coordinates: parsePolygonOrRectangle(_, opts, childCtx)
-                });
+                }) as Geometry;
             case 'gml:Surface':
                 return rewind({
                     type: 'MultiPolygon',
                     coordinates: parseSurface(_, opts, childCtx)
-                });
+                }) as Geometry;
             case 'gml:MultiSurface':
                 return rewind({
                     type: 'MultiPolygon',
                     coordinates: parseMultiSurface(_, opts, childCtx)
-                });
+                }) as Geometry;
             case 'gml:MultiGeometry':
                 // TODO similar to gml:MultiSurface ??
                 // example: https://metropolplaner.de/osterholz/wfs?typeNames=plu:LU.SupplementaryRegulation&request=GetFeature
