@@ -2,8 +2,8 @@ import { convert as convertCRS, getBbox, getCentroid, parse as gmlToGeojson } fr
 import { geojsonToWKT, wktToGeoJSON } from '@terraformer/wkt';
 import { geomToGml } from 'geojson-to-gml-3';
 import { throwHttpError } from '../../../../utils';
+import { ConversionMode, GeoFormat } from './types';
 import { DOMParser } from '@xmldom/xmldom';
-import { GeoFormat } from './types';
 import { GeoJSON, Geometry, GeometryCollection, Point } from 'geojson';
 
 const DEFAULT_CRS = 'WGS84';
@@ -17,21 +17,19 @@ const domParser = new DOMParser({
     }
 });
 
-export function convert(inputGeometry: string, exportFormat: GeoFormat, exportCRS: string = DEFAULT_CRS): string {
+export function convert(inputGeometry: string, exportFormat: GeoFormat, exportCRS: string = DEFAULT_CRS, mode: ConversionMode): string {
     let geojson = parse(inputGeometry);
     // TODO
     // if (exportCRS != DEFAULT_CRS) {
     //     geojson = convertCRS(geojson, exportCRS);
     // }
+    if (mode == 'bbox') {
+        geojson = getBbox(geojson) as GeoJSON;
+    }
+    else if (mode == 'centroid') {
+        geojson = getCentroid(geojson as Geometry | GeometryCollection) as Point;
+    }
     return write(geojson, exportFormat);
-}
-
-export function bbox(inputGeometry: string, exportFormat: GeoFormat) {
-
-}
-
-export function centroid(inputGeometry: string, exportFormat: GeoFormat) {
-
 }
 
 function parse(inputGeometry: string): GeoJSON {

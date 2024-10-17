@@ -1,4 +1,4 @@
-import { bbox, centroid, convert } from './geoConverter';
+import { convert } from './geoConverter';
 import { FastifyInstance } from 'fastify';
 import { ConversionMode, FORMATS, GeoFormat, MODES } from './types';
 import { throwHttpError } from '../../../../utils';
@@ -29,17 +29,7 @@ export default async (server: FastifyInstance, options: any) => {
             reply = reply.header('Content-Type', FORMATS[exportFormat]);
 
             // create response
-            switch (mode) {
-                case 'full':
-                    replyBody = convert(body, exportFormat, request.query.exportCRS);
-                    break;
-                case 'centroid':
-                    replyBody = centroid(body, exportFormat);
-                    break;
-                case 'bbox':
-                    replyBody = bbox(body, exportFormat);
-                    break;
-            }
+            replyBody = convert(body, exportFormat, request.query.exportCRS, mode);
         }
         catch (e) {
             if (e instanceof Error) {
@@ -51,7 +41,6 @@ export default async (server: FastifyInstance, options: any) => {
                 replyBody = String(e);
             }
         }
-
         return reply.send(replyBody);
     });
 }

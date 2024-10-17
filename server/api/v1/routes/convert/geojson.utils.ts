@@ -48,20 +48,21 @@ export function getBbox(spatial: AllGeoJSON): Point | Polygon | undefined {
     return bboxPolygon(bbox(spatial))?.geometry;
 }
 
-// export function getCentroid(spatial: Geometry | GeometryCollection): Point {
-//     if (!spatial) {
-//         return undefined;
-//     }
-//     let modifiedSpatial = { ...spatial };
-//     // turf/centroid does not support envelope, so we turn it into a linestring which has the same centroid
-//     if (modifiedSpatial.type?.toLowerCase() == 'envelope') {
-//         modifiedSpatial.type = 'LineString';
-//     }
-//     if (modifiedSpatial.type == 'GeometryCollection') {
-//         (<GeometryCollection>modifiedSpatial).geometries.filter((geometry: AllGeoJSON) => geometry.type == 'Envelope').forEach((geometry: AllGeoJSON) => geometry.type = 'LineString');
-//     }
-//     return centroid(modifiedSpatial)?.geometry;
-// }
+export function getCentroid(spatial: Geometry | GeometryCollection): Point | undefined {
+    if (!spatial) {
+        return undefined;
+    }
+    let modifiedSpatial = { ...spatial };
+    // turf/centroid does not support envelope, so we turn it into a linestring which has the same centroid
+    if (modifiedSpatial.type?.toLowerCase() == 'envelope') {
+        modifiedSpatial.type = 'LineString';
+    }
+    if (modifiedSpatial.type == 'GeometryCollection') {
+        // @ts-ignore we will check for Envelope, just to be sure
+        (<GeometryCollection>modifiedSpatial).geometries.filter((geometry: AllGeoJSON) => geometry.type == 'Envelope').forEach((geometry: AllGeoJSON) => geometry.type = 'LineString');
+    }
+    return centroid(modifiedSpatial)?.geometry;
+}
 
 export function getBoundingBox(lowerCorner: string, upperCorner: string, crs?: string) {
     const transformCoords = transformer(crs);
