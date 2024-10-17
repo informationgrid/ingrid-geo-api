@@ -17,7 +17,7 @@
     "conversion"
   ],
   "author": "Erik-Lân Do Dinh",
-  "license": "ISC",
+  "license": "EUPL",
   "dependencies": {
     "@fastify/autoload": "^6.0.2",
     "@sinclair/typebox": "^0.33.16",
@@ -36,11 +36,16 @@
     "xpath": "^0.0.34"
   },
   "devDependencies": {
+    "@eslint/js": "^9.12.0",
     "@tsconfig/node20": "^20.1.4",
+    "@types/eslint__js": "^8.42.3",
     "@types/node": "^20.11.30",
     "@types/terraformer__wkt": "^2.0.3",
     "copyfiles": "^2.4.1",
+    "eslint": "^9.12.0",
+    "eslint-plugin-license-header": "^0.6.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.9.0"
   }
 }
