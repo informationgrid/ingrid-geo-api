@@ -36,9 +36,7 @@ RUN npm run install-production
 # copy built files from server and client
 WORKDIR /opt/geo-conversion-api
 COPY --chown=node:node --from=build-server /opt/geo-conversion-api/server/dist ./server
-
-# remove this line
-COPY --chown=node:node config.json .
+COPY --chown=node:node config.json README.md .
 
 EXPOSE 3000
 
