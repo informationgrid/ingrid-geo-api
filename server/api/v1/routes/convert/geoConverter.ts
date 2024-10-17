@@ -7,8 +7,7 @@ import { DOMParser } from '@xmldom/xmldom';
 import { GeoJSON, Geometry, GeometryCollection, Point } from 'geojson';
 
 const DEFAULT_CRS = 'WGS84';
-
-const domParser = new DOMParser({
+const DOM_PARSER = new DOMParser({
     // throw on error, swallow rest
     errorHandler: (level, msg) => {
         if (level == 'error') {
@@ -16,6 +15,7 @@ const domParser = new DOMParser({
         }
     }
 });
+const PARSERS = [parseGeoJSON, parseGML, parseWKT];
 
 export function convert(inputGeometry: string, exportFormat: GeoFormat, exportCRS: string = DEFAULT_CRS, mode: ConversionMode): string {
     let geojson = parse(inputGeometry);
@@ -33,9 +33,8 @@ export function convert(inputGeometry: string, exportFormat: GeoFormat, exportCR
 }
 
 function parse(inputGeometry: string): GeoJSON {
-    let parsers = [parseGeoJSON, parseGML, parseWKT];
     // try parsing with various parsers
-    for (let parser = parsers.shift(); parser; parser = parsers.shift()) {
+    for (let parser of PARSERS) {
         try {
             return parser(inputGeometry);
         }
@@ -59,7 +58,7 @@ function parseGeoJSON(inputGeometry: string): GeoJSON {
     return JSON.parse(inputGeometry);
 }
 
-function writeGeoJSON(geojson: any): string {
+function writeGeoJSON(geojson: GeoJSON): string {
     return JSON.stringify(geojson);
 }
 
@@ -68,13 +67,13 @@ function parseGML(inputGeometry: string): GeoJSON {
     if (!inputGeometry.includes('xmlns:gml')) {
         inputGeometry = inputGeometry.replace('>', ' xmlns:gml="http://www.opengis.net/gml/3.2">');
     }
-    let dom = domParser.parseFromString(inputGeometry, 'application/xml');
+    let dom = DOM_PARSER.parseFromString(inputGeometry, 'application/xml');
     // @ts-expect-error xmldom uses own Node/Element implementations, which are compatible
     // see https://github.com/xmldom/xmldom/issues/724
     return gmlToGeojson(dom.documentElement, undefined, { 'gml': 'http://www.opengis.net/gml/3.2' });
 }
 
-function writeGML(geojson: any): string {
+function writeGML(geojson: GeoJSON): string {
     return geomToGml(geojson);
 }
 

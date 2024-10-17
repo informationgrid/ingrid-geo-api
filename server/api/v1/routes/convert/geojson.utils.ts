@@ -18,18 +18,17 @@ import * as xpath from 'xpath';
 import bbox from '@turf/bbox';
 import bboxPolygon from '@turf/bbox-polygon';
 import centroid from '@turf/centroid';
+import deepEqual from 'deep-equal';
+import proj4 from 'proj4';
 import rewind from '@turf/rewind';
 import { AllGeoJSON } from '@turf/helpers';
 import { Geometry, GeometryCollection, Point, Polygon } from 'geojson';
 
-const deepEqual = require('deep-equal');
-
 // prepare proj4js
-const proj4 = require('proj4');
 const proj4jsMappings = require('./proj4.json');
 proj4.defs(Object.entries(proj4jsMappings));
 
-function transformer(crs: string | undefined): (x: number, y: number) => number[] {
+function transformer(crs: string = 'WGS84'): (x: number, y: number) => number[] {
     return (x: number, y: number) => proj4(crs, 'WGS84').forward([x, y]);
 }
 
@@ -58,7 +57,7 @@ export function getCentroid(spatial: Geometry | GeometryCollection): Point | und
         modifiedSpatial.type = 'LineString';
     }
     if (modifiedSpatial.type == 'GeometryCollection') {
-        // @ts-ignore we will check for Envelope, just to be sure
+        // @ts-expect-error we will check for Envelope, just to be sure
         (<GeometryCollection>modifiedSpatial).geometries.filter((geometry: AllGeoJSON) => geometry.type == 'Envelope').forEach((geometry: AllGeoJSON) => geometry.type = 'LineString');
     }
     return centroid(modifiedSpatial)?.geometry;
@@ -89,7 +88,7 @@ export function getBoundingBox(lowerCorner: string, upperCorner: string, crs?: s
     }
 }
 
-// @ts-ignore despite what TS says, function does NOT lack return statement
+// @ts-expect-error despite what TS says, function does NOT lack return statement
 export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ name: string ]: string; }): Geometry | null {
     if (_ == null) {
         return null;
@@ -374,6 +373,7 @@ export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ na
                 };
             case 'gml:Rectangle':
                 // same as polygon
+            // eslint-disable-next-line no-fallthrough
             case 'gml:Polygon':
                 return rewind({
                     type: 'Polygon',
