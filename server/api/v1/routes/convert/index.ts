@@ -1,7 +1,7 @@
 import { convert } from './geoConverter';
+import { throwHttpError } from '../../../../utils';
 import { FastifyInstance } from 'fastify';
 import { ConversionMode, FORMATS, GeoFormat, MODES } from './types';
-import { throwHttpError } from '../../../../utils';
 
 interface ConversionQuery {
     exportCRS: string,
