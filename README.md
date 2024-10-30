@@ -3,6 +3,8 @@
 This API converts geometry information from and to various formats.
 Additionally, it can create centroid and bbox information.
 
+The default port is 3000 and can be changed using the `GEO_API_PORT` environment variable.
+
 
 ## Endpoints
 
@@ -27,7 +29,7 @@ The to-be-converted geometry object in one of the supported formats.
 
 ## Formats
 
-Supported formats (parameter in parentheses) are
+Supported formats for input and output (parameter in parentheses) are
 * GeoJSON (`geojson`)
 * GML (`gml`)
 * WKT (`wkt`)

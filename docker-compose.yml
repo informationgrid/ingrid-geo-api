@@ -4,6 +4,7 @@ services:
     container_name: geo-conversion-api
     image: geo-conversion-api
     environment:
-     - NODE_ENV=production
+      - GEO_API_PORT=3000
+      - NODE_ENV=production
     ports:
       - 3000:3000

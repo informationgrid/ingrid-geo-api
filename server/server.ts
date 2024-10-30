@@ -21,6 +21,7 @@
  * ==================================================
  */
 
+import { parseNumber } from './utils';
 import autoload from '@fastify/autoload';
 import config from './config';
 import path from 'path';
@@ -51,7 +52,8 @@ async function start() {
         }
     });
     try {
-        await server.listen({ host: '0.0.0.0', port: 3000 });
+        let port = parseNumber(process.env.GEO_API_PORT) ?? 3000;
+        await server.listen({ host: '0.0.0.0', port });
     }
     catch (err) {
         server.log.error(err);
