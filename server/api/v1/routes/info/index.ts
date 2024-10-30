@@ -22,11 +22,13 @@
  */
 
 import * as fs from 'fs';
+import { marked } from 'marked';
 import { FastifyInstance } from 'fastify';
 
 export default async (server: FastifyInstance, options: any) => {
     server.get('/', async function handler (request, reply) {
-        let body = fs.readFileSync('../README.md');
+        let md = fs.readFileSync('../README.md', 'utf8');
+        let body = marked.parse(md);
         return reply.header('Content-Type', 'text/html').send(body);
     });
 }
