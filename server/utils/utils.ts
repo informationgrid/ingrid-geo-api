@@ -21,9 +21,21 @@
  * ==================================================
  */
 
+import * as fs from 'fs';
+import { marked } from 'marked';
+
 export function parseNumber(str: string | undefined) {
     let num = Number(str);
     return !isNaN(num) ? num : undefined;
+}
+
+export async function template(title: string, bodySource: string): Promise<string> {
+    let template = fs.readFileSync('./utils/template.html', 'utf8');
+    let md = fs.readFileSync('../README.md', 'utf8');
+    let body = await marked.parse(md);
+    template = template.replace('{{ title }}', title);
+    template = template.replace('{{ body }}', body);
+    return template;
 }
 
 export function throwHttpError(status: string | number, msg: string): never {

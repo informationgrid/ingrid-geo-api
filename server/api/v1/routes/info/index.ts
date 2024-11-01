@@ -21,14 +21,13 @@
  * ==================================================
  */
 
-import * as fs from 'fs';
-import { marked } from 'marked';
+import { template } from '../../../../utils/utils';
 import { FastifyInstance } from 'fastify';
+
+const README = template('Information', '../README.md');
 
 export default async (server: FastifyInstance, options: any) => {
     server.get('/', async function handler (request, reply) {
-        let md = fs.readFileSync('../README.md', 'utf8');
-        let body = marked.parse(md);
-        return reply.header('Content-Type', 'text/html').send(body);
+        return reply.header('Content-Type', 'text/html').send(await README);
     });
 }
