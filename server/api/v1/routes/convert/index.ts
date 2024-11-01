@@ -27,6 +27,7 @@ import { FastifyInstance } from 'fastify';
 import { ConversionMode, FORMATS, GeoFormat, MODES } from './types';
 
 interface ConversionQuery {
+    importCRS: string,
     exportCRS: string,
     exportFormat: GeoFormat,
     mode: ConversionMode
@@ -52,7 +53,7 @@ export default async (server: FastifyInstance, options: any) => {
             reply = reply.header('Content-Type', FORMATS[exportFormat]);
 
             // create response
-            replyBody = convert(body, exportFormat, request.query.exportCRS, mode);
+            replyBody = convert(body, exportFormat, request.query.importCRS, request.query.exportCRS, mode);
         }
         catch (e) {
             if (e instanceof Error) {

@@ -40,9 +40,9 @@ const DOM_PARSER = new DOMParser({
 });
 const PARSERS = [parseGeoJSON, parseGML, parseWKT];
 
-export function convert(inputGeometry: string, exportFormat: GeoFormat, exportCRS: string = DEFAULT_CRS, mode: ConversionMode): string {
-    let geojson = parse(inputGeometry);
-    // TODO
+export function convert(inputGeometry: string, exportFormat: GeoFormat, importCRS: string, exportCRS: string = DEFAULT_CRS, mode: ConversionMode): string {
+    let geojson = parse(inputGeometry, importCRS);
+    // TODO handle exportCRS if given
     // if (exportCRS != DEFAULT_CRS) {
     //     geojson = convertCRS(geojson, exportCRS);
     // }
@@ -55,7 +55,8 @@ export function convert(inputGeometry: string, exportFormat: GeoFormat, exportCR
     return write(geojson, exportFormat);
 }
 
-function parse(inputGeometry: string): GeoJSON {
+// TODO handle importCRS if given
+function parse(inputGeometry: string, importCRS: string): GeoJSON {
     // try parsing with various parsers
     for (let parser of PARSERS) {
         try {
