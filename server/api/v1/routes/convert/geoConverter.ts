@@ -24,7 +24,7 @@
 import { convert as convertCRS, getBbox, getCentroid, parse as gmlToGeojson } from './geojson.utils';
 import { geojsonToWKT, wktToGeoJSON } from '@terraformer/wkt';
 import { geomToGml } from 'geojson-to-gml-3';
-import { throwHttpError } from '../../../../utils';
+import { throwHttpError } from '../../../../utils/utils';
 import { ConversionMode, GeoFormat } from './types';
 import { DOMParser } from '@xmldom/xmldom';
 import { GeoJSON, Geometry, GeometryCollection, Point } from 'geojson';

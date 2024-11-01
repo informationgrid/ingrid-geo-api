@@ -22,7 +22,7 @@
  */
 
 import { convert } from './geoConverter';
-import { throwHttpError } from '../../../../utils';
+import { throwHttpError } from '../../../../utils/utils';
 import { FastifyInstance } from 'fastify';
 import { ConversionMode, FORMATS, GeoFormat, MODES } from './types';
 

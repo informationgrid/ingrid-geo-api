@@ -21,7 +21,7 @@
  * ==================================================
  */
 
-import { parseNumber } from './utils';
+import { parseNumber } from './utils/utils';
 import autoload from '@fastify/autoload';
 import config from './config';
 import path from 'path';
