@@ -19,7 +19,57 @@ Converts a given geometry object from and to one of the supported formats. The i
 Also supports calculation of the centroid or the bounding box of a given geometry, via the `mode` parameter.
 
 #### Body
-The to-be-converted geometry object in one of the supported formats.
+
+The to-be-converted geometry object in one of the supported formats. Examples for input:
+
+Example `GeoJSON`:
+```
+{
+    "type": "GeometryCollection",
+    "geometries": [
+        {
+            "type": "Point",
+            "coordinates": [40, 10]
+        },
+        {
+            "type": "LineString",
+            "coordinates": [[10, 10], [20, 20], [10, 40]]
+        },
+        {
+            "type": "Polygon",
+            "coordinates": [[[40, 40], [20, 45], [45, 30], [40, 40]]]
+        }
+    ]
+}
+```
+
+Example `GML`:
+```
+<gml:MultiGeometry>
+    <gml:geometryMembers>
+        <gml:Point>
+            <gml:pos>40 10</gml:pos>
+        </gml:Point>
+        <gml:LineString>
+            <gml:posList>10 10 20 20 10 40</gml:posList>
+        </gml:LineString>
+        <gml:Polygon>
+            <gml:exterior>
+                <gml:LinearRing>
+                    <gml:posList>40 40 20 45 45 30 40 40</gml:posList>
+                </gml:LinearRing>
+            </gml:exterior>
+        </gml:Polygon>
+    </gml:geometryMembers>
+</gml:MultiGeometry>
+```
+
+Example `WKT`:
+```
+GEOMETRYCOLLECTION (POINT (40 10),
+LINESTRING (10 10, 20 20, 10 40),
+POLYGON ((40 40, 20 45, 45 30, 40 40)))
+```
 
 #### Query Parameters
 * `exportCRS` - TODO
