@@ -14,13 +14,20 @@ Returns general information on API use.
 
 ### POST `/convert`
 
-Converts a given geometry object from and to one of the supported formats. The input format is recognized automatically, the export format has to be specified via query parameter.
+Converts a given geometry object from and to one of the [supported formats](#formats). The input format is recognized automatically, the export format has to be specified via the `exportFormat` query parameter.
 
 Also supports calculation of the centroid or the bounding box of a given geometry, via the `mode` parameter.
 
+#### Query Parameters
+
+* `importCRS` - TODO
+* `exportCRS` - TODO
+* `exportFormat` - One of [`geojson`, `gml`, `wkt`]
+* `mode` - One of [`full`, `centroid`, `bbox`]. Defaults to `full`
+
 #### Body
 
-The to-be-converted geometry object in one of the supported formats. Examples for input:
+The to-be-converted geometry object in one of the [supported formats](#formats). Examples for input:
 
 Example `GeoJSON`:
 ```
@@ -70,13 +77,6 @@ GEOMETRYCOLLECTION (POINT (40 10),
 LINESTRING (10 10, 20 20, 10 40),
 POLYGON ((40 40, 20 45, 45 30, 40 40)))
 ```
-
-#### Query Parameters
-
-* `importCRS` - TODO
-* `exportCRS` - TODO
-* `exportFormat` - One of [`geojson`, `gml`, `wkt`]
-* `mode` - One of [`full`, `centroid`, `bbox`]. Defaults to `full`
 
 
 ## Formats

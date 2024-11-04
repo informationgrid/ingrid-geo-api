@@ -3,15 +3,16 @@
     <head>
         <style>
             body {
-                margin: 50px;
+                max-width: 800px;
+                margin: 50px auto;
                 font-family: Verdana;
             }
             pre {
-                background: lightblue;
+                background: color-mix(in srgb, lightblue, transparent 30%);
                 padding: 8px;
             }
-            code:not(pre) {
-                background: lightblue;
+            code:not(pre > code) {
+                background: color-mix(in srgb, lightblue, transparent 30%);
                 padding: 2px;
             }
         </style>
