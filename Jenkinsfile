@@ -4,6 +4,7 @@ pipeline {
 
     environment {
         REGISTRY = "docker-registry.wemove.com/geo-conversion-api"
+        SCANNER_HOME = tool 'SonarQube Scanner'
     }
 
     options {
@@ -12,6 +13,21 @@ pipeline {
     }
 
     stages {
+        stage ('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('Wemove SonarQube') {
+                    sh "${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=geo-conversion-api"
+                }
+            }
+        }
+        stage ('SonarQube Quality Gate') {
+            options {
+                timeout(time: 5, unit: 'MINUTES')
+            }
+            steps {
+                waitForQualityGate abortPipeline: true
+            }
+        }
         stage('Build Image') {
             steps {
                 script {
