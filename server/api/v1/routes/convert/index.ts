@@ -21,22 +21,28 @@
  * ==================================================
  */
 
-import { convert } from './geoConverter';
-import { throwHttpError } from '../../../../utils/utils';
 import { FastifyInstance } from 'fastify';
+import { throwHttpError } from '../../../../utils/utils';
+import { ConversionSettings, convert } from './GeoConverter';
 import { ConversionMode, FORMATS, GeoFormat, MODES } from './types';
 
-interface ConversionQuery {
-    importCRS: string,
-    exportCRS: string,
-    exportFormat: GeoFormat,
-    mode: ConversionMode
-}
-
 export default async (server: FastifyInstance, options: any) => {
-    server.post<{ Querystring: ConversionQuery }>('/', async function handler (request, reply) {
+    server.post<{ Querystring: ConversionSettings }>('/', async function handler (request, reply) {
         let replyBody;
         try {
+            let body = request.body as string;
+            if (!body?.length) {
+                throwHttpError(400, `Request body is mandatory, but was empty`);
+            }
+
+            let importFormat: GeoFormat = request.query.importFormat;
+            if (importFormat && !Object.keys(FORMATS).includes(importFormat)) {
+                throwHttpError(400, `Parameter "importFormat" must be one of ${Object.keys(FORMATS)}`);
+            }
+            if (!importFormat) {
+                importFormat = determineFormat(body);
+            }
+
             let exportFormat: GeoFormat = request.query.exportFormat;
             if (!Object.keys(FORMATS).includes(exportFormat)) {
                 throwHttpError(400, `Parameter "exportFormat" must be one of ${Object.keys(FORMATS)}`);
@@ -47,13 +53,11 @@ export default async (server: FastifyInstance, options: any) => {
                 throwHttpError(400, `Parameter "mode" must be one of ${MODES}`);
             }
 
-            let body = request.body as string;
-
             // set content-type
             reply = reply.header('Content-Type', FORMATS[exportFormat]);
 
             // create response
-            replyBody = convert(body, exportFormat, request.query.importCRS, request.query.exportCRS, mode);
+            replyBody = convert(body, request.query);
         }
         catch (e) {
             if (e instanceof Error) {
@@ -67,4 +71,17 @@ export default async (server: FastifyInstance, options: any) => {
         }
         return reply.send(replyBody);
     });
+}
+
+// naive heuristic for input format
+function determineFormat(body: string): GeoFormat {
+    switch (body[0]) {
+        case '[':
+        case '{':
+            return 'geojson';
+        case '<':
+            return 'gml';
+        default:
+            return 'wkt';
+    }
 }

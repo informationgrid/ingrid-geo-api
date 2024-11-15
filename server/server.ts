@@ -45,6 +45,7 @@ async function start() {
         dir: routesBaseDir,
         // forceESM: true,
         indexPattern: /^.*index\.ts$/,
+        maxDepth: 1,
         routeParams: true,
         options: { prefix: versionBaseUrl },
         dirNameRoutePrefix: (folderParent: string, folderName: string) => {
