@@ -15,10 +15,17 @@ Returns general information on API use.
 ### POST `/convert`
 
 Converts a given geometry object from and to one of the [supported formats](#formats).
-If the input format is not given via the `importFormat` query parameter, a simple heuristic is used to deduce it.
+The request requires a correct `content-type` header for the payload type - otherwise a simple heuristic is used to deduce it.
 The export format has to be specified via the `exportFormat` query parameter.
 
 Also supports calculation of the centroid or the bounding box of a given geometry, via the `mode` parameter.
+
+#### Content-Type
+
+Accepted `content-type`s are:
+* [`application/xml`, `application/gml+xml`] for GML snippets
+* [`application/json`, `application/geo+json`] for GeoJSON objects or arrays
+* [`text/plain`] for WKT
 
 #### Query Parameters
 
@@ -26,7 +33,6 @@ Required:
 * `exportFormat` - One of [`geojson`, `gml`, `wkt`]
 
 Optional:
-* `importFormat` - One of [`geojson`, `gml`, `wkt`]
 * `importCRS` - TODO
 * `exportCRS` - TODO
 * `mode` - One of [`full`, `centroid`, `bbox`]. Defaults to `full`

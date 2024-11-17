@@ -22,54 +22,65 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { throwHttpError } from '../../../../utils/utils';
-import { ConversionSettings, convert } from './GeoConverter';
-import { ConversionMode, FORMATS, GeoFormat, MODES } from './types';
+import { GeoJSON } from 'geojson';
+import { ConversionSettings, convert } from './GeoConverter.js';
+import { ParserFactory } from './parsing/ParserFactory.js';
+import { FORMATS, GeoFormat, MODES } from './types.js';
 
 export default async (server: FastifyInstance, options: any) => {
-    server.post<{ Querystring: ConversionSettings }>('/', async function handler (request, reply) {
-        let replyBody;
+
+    // define content-type parsers
+    Object.entries(FORMATS).forEach(([geoFormat, contentTypes2]) => {
+        server.addContentTypeParser(contentTypes2 as unknown as string[], { parseAs: 'string' }, (request, body, done) => {
+            try {
+                let parsedBody = ParserFactory.get(geoFormat as GeoFormat).parse(body as string);
+                done(null, parsedBody);
+            }
+            catch (e) {
+                done(e as Error, null);
+            }
+        });
+    });
+    server.addContentTypeParser('*', { parseAs: 'string' }, (request, body, done) => {
+        let format = determineFormat(body as string);
+        let parsedBody = ParserFactory.get(format).parse(body as string);
+        done(null, parsedBody);
+    });
+
+    server.post<{ Body: GeoJSON, Querystring: ConversionSettings }>('/', {
+        schema: {
+            querystring: {
+                type: 'object',
+                properties: {
+                    exportFormat: {
+                        enum: Object.keys(FORMATS)
+                    },
+                    exportCRS: {
+                        type: 'string'
+                    },
+                    mode: {
+                        enum: MODES
+                    }
+                },
+                required: ['exportFormat']
+            }
+        }
+    }, async ({ body, query }, reply) => {
         try {
-            let body = request.body as string;
-            if (!body?.length) {
-                throwHttpError(400, `Request body is mandatory, but was empty`);
-            }
-
-            let importFormat: GeoFormat = request.query.importFormat;
-            if (importFormat && !Object.keys(FORMATS).includes(importFormat)) {
-                throwHttpError(400, `Parameter "importFormat" must be one of ${Object.keys(FORMATS)}`);
-            }
-            if (!importFormat) {
-                importFormat = determineFormat(body);
-            }
-
-            let exportFormat: GeoFormat = request.query.exportFormat;
-            if (!Object.keys(FORMATS).includes(exportFormat)) {
-                throwHttpError(400, `Parameter "exportFormat" must be one of ${Object.keys(FORMATS)}`);
-            }
-
-            let mode: ConversionMode = request.query.mode ?? 'full';
-            if (!MODES.includes(mode)) {
-                throwHttpError(400, `Parameter "mode" must be one of ${MODES}`);
-            }
-
             // set content-type
-            reply = reply.header('Content-Type', FORMATS[exportFormat]);
-
+            reply = reply.header('Content-Type', FORMATS[query.exportFormat][0]);
             // create response
-            replyBody = convert(body, request.query);
+            let replyBody = convert(body, query);
+            return reply.send(replyBody);
         }
         catch (e) {
             if (e instanceof Error) {
-                reply.status(e.cause as number);
-                replyBody = e.message;
+                return reply.header('Content-Type', 'text/plain').status(e.cause as number).send(e.message);
             }
             else {
-                reply.status(500);
-                replyBody = String(e);
+                return reply.header('Content-Type', 'text/plain').status(500).send(e);
             }
         }
-        return reply.send(replyBody);
     });
 }
 

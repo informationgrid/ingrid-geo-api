@@ -30,22 +30,19 @@ import { ConversionMode, GeoFormat } from './types.js';
 const DEFAULT_CRS = 'WGS84';
 
 export interface ConversionSettings {
-    importFormat: GeoFormat,
     importCRS?: string,
     exportFormat: GeoFormat,
     exportCRS?: string,
     mode: ConversionMode
 }
 
-export function convert(geometry: string, { importFormat, importCRS, exportFormat, exportCRS, mode }: ConversionSettings): string {
+export function convert(geojson: GeoJSON, { importCRS, exportFormat, exportCRS, mode }: ConversionSettings): string {
 
-    if (importFormat == 'geojson' && importCRS != DEFAULT_CRS
-        || exportFormat == 'geojson' && exportCRS != DEFAULT_CRS
+    if (exportFormat == 'geojson' && exportCRS && exportCRS != DEFAULT_CRS
     ) {
         throwHttpError(400, 'GeoJSON is always represented in WGS84 but you specified a different CRS');
     }
 
-    let geojson = ParserFactory.get(importFormat).parse(geometry, importCRS);
     // TODO handle exportCRS if given
     // if (exportCRS != DEFAULT_CRS) {
     //     geojson = convertCRS(geojson, exportCRS);
