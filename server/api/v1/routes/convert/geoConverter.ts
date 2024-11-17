@@ -21,7 +21,7 @@
  * ==================================================
  */
 
-import { convert as convertCRS, getBbox, getCentroid, parse as gmlToGeojson } from './geojson.utils';
+import { convert as convertCRS, getBbox, getCentroid, parseGml as gmlToGeojson } from './geojson.utils';
 import { geojsonToWKT, wktToGeoJSON } from '@terraformer/wkt';
 import { geomToGml } from 'geojson-to-gml-3';
 import { throwHttpError } from '../../../../utils/utils';

@@ -95,8 +95,7 @@ export function getBoundingBox(lowerCorner: string, upperCorner: string, crs?: s
     }
 }
 
-// @ts-expect-error despite what TS says, function does NOT lack return statement
-export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ name: string ]: string; }): Geometry | null {
+export function parseGml(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ name: string ]: string; }): Geometry | null {
     if (_ == null) {
         return null;
     }
@@ -351,6 +350,18 @@ export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ na
         return polygons;
     };
 
+    const parseMultiGeometry = (_: Node, opts: ParseOptions, ctx: Context = {}) => {
+        const geometries: Geometry[] = [];
+        Object.values(select('.//gml:geometryMembers/*|.//gml:geometryMember/*', _)).forEach((c: Element) => {
+            geometries.push(parseGml(c, opts, nsMap) as Geometry);
+        });
+
+        if (geometries.length === 0) {
+            throw new Error(_.nodeName + ' must have > 0 geometries');
+        }
+        return geometries;
+    };
+
     const childCtx = createChildContext(_, opts, {});
 
     opts ??= {};
@@ -397,9 +408,10 @@ export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ na
                     coordinates: parseMultiSurface(_, opts, childCtx)
                 }) as Geometry;
             case 'gml:MultiGeometry':
-                // TODO similar to gml:MultiSurface ??
-                // example: https://metropolplaner.de/osterholz/wfs?typeNames=plu:LU.SupplementaryRegulation&request=GetFeature
-                break;
+                return {
+                    "type": "GeometryCollection",
+                    "geometries": parseMultiGeometry(_, opts, childCtx)
+                };
             default:
                 return null;
         }
