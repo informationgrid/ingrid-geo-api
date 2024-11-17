@@ -27,12 +27,12 @@ import centroid from '@turf/centroid';
 import { AllGeoJSON } from '@turf/helpers';
 import rewind from '@turf/rewind';
 import deepEqual from 'deep-equal';
-import { Geometry, GeometryCollection, Point, Polygon } from 'geojson';
+import { GeoJSON, Geometry, GeometryCollection, Point, Polygon } from 'geojson';
 import proj4 from 'proj4';
 import * as xpath from 'xpath';
 import proj4jsMappings from './proj4.json';
 
-// prepare proj4js
+// load proj4js named projections
 proj4.defs(Object.entries(proj4jsMappings) as string[][]);
 
 function transformer(crs: string = 'WGS84'): (x: number, y: number) => number[] {
@@ -95,7 +95,7 @@ export function getBoundingBox(lowerCorner: string, upperCorner: string, crs?: s
     }
 }
 
-export function parseGml(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ name: string ]: string; }): Geometry | null {
+export function parseGml(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ name: string ]: string; }): GeoJSON {
     if (_ == null) {
         return null;
     }

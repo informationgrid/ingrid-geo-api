@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "resolveJsonModule": true,
     "sourceMap": false,
-    "strict": true,
+    "strict": false,
     "typeRoots": [
       "./node_modules/@types",
       "./@types"
