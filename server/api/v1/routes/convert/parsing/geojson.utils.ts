@@ -21,19 +21,19 @@
  * ==================================================
  */
 
-import * as xpath from 'xpath';
 import bbox from '@turf/bbox';
 import bboxPolygon from '@turf/bbox-polygon';
 import centroid from '@turf/centroid';
-import deepEqual from 'deep-equal';
-import proj4 from 'proj4';
-import rewind from '@turf/rewind';
 import { AllGeoJSON } from '@turf/helpers';
+import rewind from '@turf/rewind';
+import deepEqual from 'deep-equal';
 import { Geometry, GeometryCollection, Point, Polygon } from 'geojson';
+import proj4 from 'proj4';
+import * as xpath from 'xpath';
+import proj4jsMappings from './proj4.json';
 
 // prepare proj4js
-const proj4jsMappings = require('./proj4.json');
-proj4.defs(Object.entries(proj4jsMappings));
+proj4.defs(Object.entries(proj4jsMappings) as string[][]);
 
 function transformer(crs: string = 'WGS84'): (x: number, y: number) => number[] {
     return (x: number, y: number) => proj4(crs, 'WGS84').forward([x, y]);

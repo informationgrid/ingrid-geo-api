@@ -24,5 +24,5 @@
 import path from 'path';
 import readConfig from 'read-config-ng';
 
-const config = readConfig(path.resolve(__dirname, '..', 'config.json'));
+const config = readConfig(path.resolve(import.meta.dirname, '..', 'config.json'));
 export default config;

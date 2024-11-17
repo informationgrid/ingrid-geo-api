@@ -21,10 +21,10 @@
  * ==================================================
  */
 
-import { GeoFormat } from '../types';
-import { GeoJsonParser } from './parser/GeoJsonParser';
-import { GmlParser } from './parser/GmlParser';
-import { WktParser } from './parser/WktParser';
+import { GeoFormat } from '../types.js';
+import { GeoJsonParser } from './parser/GeoJsonParser.js';
+import { GmlParser } from './parser/GmlParser.js';
+import { WktParser } from './parser/WktParser.js';
 
 export class ParserFactory {
     static get(format: GeoFormat) {

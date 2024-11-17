@@ -21,14 +21,15 @@
  * ==================================================
  */
 
-import { parseNumber } from './utils/utils';
 import autoload from '@fastify/autoload';
-import config from './config';
-import path from 'path';
 import Fastify from 'fastify';
+import path from 'path';
+import config from './config.js';
+import { parseNumber } from './utils/utils.js';
 
 const server = Fastify({
-    logger: true
+    logger: true,
+    ignoreTrailingSlash: true
 });
 
 const baseUrl = '/' + (config.server.baseUrl?.trim().replace(/^\/*|\/*$/g, '').trim() ?? '');
@@ -40,10 +41,10 @@ async function start() {
     const versionBaseUrl = `${baseUrl}/${version}`.trim().replace(/\/+/g, '/').trim()
 
     // register routes
-    const routesBaseDir = path.resolve(__dirname, `api/${version}/routes`);
+    const routesBaseDir = path.resolve(import.meta.dirname, `api/${version}/routes`);
     await server.register(autoload, {
         dir: routesBaseDir,
-        // forceESM: true,
+        forceESM: true,
         indexPattern: /^.*index\.ts$/,
         maxDepth: 1,
         routeParams: true,

@@ -22,10 +22,10 @@
  */
 
 import { GeoJSON, Geometry, GeometryCollection, Point } from 'geojson';
-import { throwHttpError } from '../../../../utils/utils';
-import { convert as convertCRS, getBbox, getCentroid } from './parsing/geojson.utils';
-import { ParserFactory } from './parsing/ParserFactory';
-import { ConversionMode, GeoFormat } from './types';
+import { throwHttpError } from '../../../../utils/utils.js';
+import { convert as convertCRS, getBbox, getCentroid } from './parsing/geojson.utils.js';
+import { ParserFactory } from './parsing/ParserFactory.js';
+import { ConversionMode, GeoFormat } from './types.js';
 
 const DEFAULT_CRS = 'WGS84';
 

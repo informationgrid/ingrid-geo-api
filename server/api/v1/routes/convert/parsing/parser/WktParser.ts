@@ -23,7 +23,7 @@
 
 import { geojsonToWKT, wktToGeoJSON } from '@terraformer/wkt';
 import { GeoJSON } from 'geojson';
-import { GeoParser } from '../GeoParser';
+import { GeoParser } from '../GeoParser.js';
 
 export class WktParser implements GeoParser {
 

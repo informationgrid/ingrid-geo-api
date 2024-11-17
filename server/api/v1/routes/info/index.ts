@@ -21,8 +21,8 @@
  * ==================================================
  */
 
-import { template } from '../../../../utils/utils';
 import { FastifyInstance } from 'fastify';
+import { template } from '../../../../utils/utils.js';
 
 const README = template('Information', '../README.md');
 
