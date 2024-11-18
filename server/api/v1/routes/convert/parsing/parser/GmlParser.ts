@@ -24,6 +24,7 @@
 import { DOMParser } from '@xmldom/xmldom';
 import { GeoJSON } from 'geojson';
 import { geomToGml } from 'geojson-to-gml-3';
+import { HttpBadRequestError } from '../../../../../../utils/utils.js';
 import { parseGml } from '../geojson.utils.js';
 import { GeoParser } from '../GeoParser.js';
 
@@ -31,7 +32,7 @@ const DOM_PARSER = new DOMParser({
     // throw on error, swallow rest
     errorHandler: (level, msg) => {
         if (level == 'error') {
-            throw new Error(msg);
+            throw new HttpBadRequestError(`Could not parse GML: ${msg}`);
         }
     }
 });

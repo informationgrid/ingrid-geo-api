@@ -21,9 +21,10 @@
  * ==================================================
  */
 
+import { createError } from '@fastify/error';
 import * as fs from 'fs';
 import { marked } from 'marked';
-import { gfmHeadingId } from "marked-gfm-heading-id";
+import { gfmHeadingId } from 'marked-gfm-heading-id';
 
 export function parseNumber(str: string | undefined) {
     let num = Number(str);
@@ -41,6 +42,4 @@ export async function template(title: string, bodyPath: string): Promise<string>
     return template;
 }
 
-export function throwHttpError(status: string | number, msg: string): never {
-    throw new Error(msg, { cause: status });
-}
+export const HttpBadRequestError = createError('HTTP_BAD_REQUEST', '%s', 400);

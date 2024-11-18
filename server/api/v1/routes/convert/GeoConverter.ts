@@ -22,7 +22,7 @@
  */
 
 import { GeoJSON, Geometry, GeometryCollection, Point } from 'geojson';
-import { throwHttpError } from '../../../../utils/utils.js';
+import { HttpBadRequestError } from '../../../../utils/utils.js';
 import { convert as convertCRS, getBbox, getCentroid } from './parsing/geojson.utils.js';
 import { ParserFactory } from './parsing/ParserFactory.js';
 import { ConversionMode, GeoFormat } from './types.js';
@@ -38,9 +38,8 @@ export interface ConversionSettings {
 
 export function convert(geojson: GeoJSON, { importCRS, exportFormat, exportCRS, mode }: ConversionSettings): string {
 
-    if (exportFormat == 'geojson' && exportCRS && exportCRS != DEFAULT_CRS
-    ) {
-        throwHttpError(400, 'GeoJSON is always represented in WGS84 but you specified a different CRS');
+    if (exportFormat == 'geojson' && exportCRS && exportCRS != DEFAULT_CRS) {
+        throw new HttpBadRequestError('GeoJSON is always represented in WGS84 but you specified a different CRS');
     }
 
     // TODO handle exportCRS if given
