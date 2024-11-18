@@ -5,8 +5,14 @@ Additionally, it can create centroid and bbox information.
 
 The default port is 3000 and can be changed using the `GEO_API_PORT` environment variable.
 
+The current base route is `/v1`.
+
 
 ## Endpoints
+
+### GET `/api-docs`
+
+Shows API specification and debugging tool.
 
 ### GET `/info`
 
