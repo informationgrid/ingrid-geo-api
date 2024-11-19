@@ -13,6 +13,13 @@ pipeline {
     }
 
     stages {
+        stage ('Run Tests') {
+            steps {
+                nodejs(nodeJSInstallationName: 'nodejs20') {
+                    sh 'cd server && npm ci && npm test'
+                }
+            }
+        }
         stage ('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('Wemove SonarQube') {
