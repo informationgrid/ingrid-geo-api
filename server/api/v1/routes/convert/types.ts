@@ -22,9 +22,9 @@
  */
 
 export const FORMATS = {
-    'geojson': ['application/json', 'application/geo+json'],
-    'gml': ['application/xml', 'application/gml+xml'],
-    'wkt': ['text/plain']
+    'geojson': ['application/json', 'application/geo+json'] as string[],
+    'gml': ['application/xml', 'application/gml+xml'] as string[],
+    'wkt': ['text/plain'] as string[]
 } as const;
 
 export const MODES = ['bbox', 'centroid', 'full'] as const;

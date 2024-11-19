@@ -21,9 +21,8 @@
  * ==================================================
  */
 
-import { FastifyInstance } from 'fastify';
+import { errorCodes, FastifyInstance } from 'fastify';
 import { GeoJSON } from 'geojson';
-import { HttpBadRequestError } from '../../../../utils/utils.js';
 import { ConversionSettings, convert } from './GeoConverter.js';
 import { ParserFactory } from './parsing/ParserFactory.js';
 import { FORMATS, GeoFormat, MODES } from './types.js';
@@ -33,15 +32,15 @@ export default async (server: FastifyInstance, options: any) => {
     // define content-type parsers
     Object.entries(FORMATS).forEach(([geoFormat, contentTypes]) => {
         server.addContentTypeParser(contentTypes as unknown as string[], { parseAs: 'string' }, (request, body, done) => {
-            if (!body?.length) {
-                done(new HttpBadRequestError('POST body was not specified'));
+            if (FORMATS['geojson'].includes(request.headers['content-type']) && !body?.length) {
+                done(new errorCodes.FST_ERR_CTP_EMPTY_JSON_BODY());
             }
             try {
                 let parsedBody = ParserFactory.get(geoFormat as GeoFormat).parse(body as string);
                 done(null, parsedBody);
             }
             catch (e) {
-                done(new HttpBadRequestError(e));
+                done(new errorCodes.FST_ERR_VALIDATION(e));
             }
         });
     });

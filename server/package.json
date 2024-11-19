@@ -25,6 +25,7 @@
   "dependencies": {
     "@fastify/autoload": "^6.0.2",
     "@fastify/swagger": "^9.2.0",
+    "@placemarkio/check-geojson": "^0.1.12",
     "@scalar/fastify-api-reference": "^1.25.64",
     "@sinclair/typebox": "^0.33.16",
     "@terraformer/wkt": "^2.2.1",
