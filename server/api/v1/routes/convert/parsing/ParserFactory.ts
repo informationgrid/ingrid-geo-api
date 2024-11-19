@@ -21,8 +21,17 @@
  * ==================================================
  */
 
-import path from 'path';
-import readConfig from 'read-config-ng';
+import { GeoFormat } from '../types.js';
+import { GeoJsonParser } from './parser/GeoJsonParser.js';
+import { GmlParser } from './parser/GmlParser.js';
+import { WktParser } from './parser/WktParser.js';
 
-const config = readConfig(path.resolve(import.meta.dirname, '..', 'config.json'));
-export default config;
+export class ParserFactory {
+    static get(format: GeoFormat) {
+        switch (format) {
+            case 'geojson': return new GeoJsonParser();
+            case 'gml': return new GmlParser();
+            case 'wkt': return new WktParser();
+        }
+    }
+}

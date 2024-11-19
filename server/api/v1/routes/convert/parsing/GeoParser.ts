@@ -21,8 +21,22 @@
  * ==================================================
  */
 
-import path from 'path';
-import readConfig from 'read-config-ng';
+import { GeoJSON } from 'geojson';
 
-const config = readConfig(path.resolve(import.meta.dirname, '..', 'config.json'));
-export default config;
+export interface GeoParser {
+    /**
+     * Parse a GeoJSON from a given geometry string.
+     * 
+     * @param geometry string representing a geometry in this parser's format
+     * @param crs coordinate reference system of the input geometry
+     * @returns a GeoJSON representation of the input geometry string
+     */
+    parse(geometry: string, crs?: string): GeoJSON;
+
+    /**
+     * Returns a string representation of this parser's format.
+     * 
+     * @param geojson GeoJSON to convert to this parser's format
+     */
+    write(geojson: GeoJSON): string;
+}

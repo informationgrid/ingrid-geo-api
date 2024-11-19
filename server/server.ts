@@ -21,36 +21,39 @@
  * ==================================================
  */
 
-import { parseNumber } from './utils/utils';
 import autoload from '@fastify/autoload';
-import config from './config';
-import path from 'path';
 import Fastify from 'fastify';
+import path from 'path';
+import config from './config.js';
+import { parseNumber } from './utils/utils.js';
 
 const server = Fastify({
-    logger: true
+    logger: true,
+    ignoreTrailingSlash: true
 });
 
-const baseUrl = '/' + (config.server.baseUrl?.trim().replace(/^\/*|\/*$/g, '').trim() ?? '');
+const BASE_URL = '/' + (config.server.baseUrl?.trim().replace(/^\/*|\/*$/g, '').trim() ?? '');
 
 // Run the server!
 async function start() {
 
     let version = 'v1';
-    const versionBaseUrl = `${baseUrl}/${version}`.trim().replace(/\/+/g, '/').trim()
+    const versionBaseUrl = `${BASE_URL}/${version}`.trim().replace(/\/+/g, '/').trim();
 
     // register routes
-    const routesBaseDir = path.resolve(__dirname, `api/${version}/routes`);
+    const routesBaseDir = path.resolve(import.meta.dirname, `api/${version}/routes`);
     await server.register(autoload, {
         dir: routesBaseDir,
-        // forceESM: true,
+        forceESM: true,
         indexPattern: /^.*index\.ts$/,
+        maxDepth: 1,
         routeParams: true,
         options: { prefix: versionBaseUrl },
         dirNameRoutePrefix: (folderParent: string, folderName: string) => {
             return `/${folderName}`;
         }
     });
+
     try {
         let port = parseNumber(process.env.GEO_API_PORT) ?? 3000;
         await server.listen({ host: '0.0.0.0', port });

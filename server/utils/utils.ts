@@ -22,17 +22,17 @@
  */
 
 import * as fs from 'fs';
-import { gfmHeadingId } from "marked-gfm-heading-id";
 import { marked } from 'marked';
+import { gfmHeadingId } from "marked-gfm-heading-id";
 
 export function parseNumber(str: string | undefined) {
     let num = Number(str);
     return !isNaN(num) ? num : undefined;
 }
 
-export async function template(title: string, bodySource: string): Promise<string> {
+export async function template(title: string, bodyPath: string): Promise<string> {
     let template = fs.readFileSync('./utils/template.html', 'utf8');
-    let md = fs.readFileSync('../README.md', 'utf8');
+    let md = fs.readFileSync(bodyPath, 'utf8');
     // add html header IDs
     marked.use(gfmHeadingId());
     let body = await marked.parse(md);

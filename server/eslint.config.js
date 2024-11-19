@@ -14,7 +14,6 @@ export default tseslint.config(
         },
         rules: {
             "@typescript-eslint/no-explicit-any": ["warn"],
-            "@typescript-eslint/no-require-imports": ["warn"],
             "@typescript-eslint/no-unused-vars": ["warn"],
             "license-header/header": ["error", "./license/license-header.js"],
             "prefer-const": ["off"],

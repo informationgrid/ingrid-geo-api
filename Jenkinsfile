@@ -3,7 +3,7 @@ pipeline {
     agent any
 
     environment {
-        registry = "docker-registry.wemove.com/geo-conversion-api"
+        REGISTRY = "docker-registry.wemove.com/geo-conversion-api"
     }
 
     options {
@@ -16,8 +16,8 @@ pipeline {
             steps {
                 script {
                     // version = snapshotVersionFromGit()
-                    // dockerImage = docker.build registry + ":" + version
-                    dockerImageLatest = docker.build registry + ":latest"
+                    // dockerImage = docker.build REGISTRY + ":" + version
+                    dockerImageLatest = docker.build REGISTRY + ":latest"
                 }
             }
         }

@@ -21,8 +21,18 @@
  * ==================================================
  */
 
-import path from 'path';
-import readConfig from 'read-config-ng';
+import { geojsonToWKT, wktToGeoJSON } from '@terraformer/wkt';
+import { GeoJSON } from 'geojson';
+import { GeoParser } from '../GeoParser.js';
 
-const config = readConfig(path.resolve(import.meta.dirname, '..', 'config.json'));
-export default config;
+export class WktParser implements GeoParser {
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    parse(geometry: string, crs?: string): GeoJSON {
+        return wktToGeoJSON(geometry);
+    }
+
+    write(geojson: GeoJSON): string {
+        return geojsonToWKT(geojson);
+    }
+}

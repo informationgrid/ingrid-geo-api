@@ -1,9 +1,11 @@
 {
   "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
-    "strict": true,
-    "sourceMap": false,
+    "moduleResolution": "nodenext",
     "outDir": "./dist",
+    "resolveJsonModule": true,
+    "sourceMap": false,
+    "strict": false,
     "typeRoots": [
       "./node_modules/@types",
       "./@types"

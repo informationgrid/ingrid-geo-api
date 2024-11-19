@@ -21,4 +21,17 @@
  * ==================================================
  */
 
-declare module 'marked-gfm-heading-id';
+import { GeoJSON } from 'geojson';
+import { GeoParser } from '../GeoParser.js';
+
+export class GeoJsonParser implements GeoParser {
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    parse(geometry: string, crs?: string): GeoJSON {
+        return JSON.parse(geometry);
+    }
+
+    write(geojson: GeoJSON): string {
+        return JSON.stringify(geojson);
+    }
+}
