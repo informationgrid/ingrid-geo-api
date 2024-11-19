@@ -58,7 +58,7 @@ export default async function app() {
     await server.register(autoload, {
         dir: routesBaseDir,
         forceESM: true,
-        indexPattern: /^.*index\.ts$/,
+        indexPattern: /^index\.(js|ts)$/,
         maxDepth: 1,
         routeParams: true,
         options: { prefix: VERSION_BASE_URL },

@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "tsc -p ./tsconfig.build.json",
-    "postbuild": "copyfiles api/**/*.json dist",
+    "postbuild": "copyfiles api/**/*.json **/*.html dist",
     "install-production": "NODE_ENV=production npm ci",
     "dev": "tsx watch ./server.ts",
     "test": "FASTIFY_AUTOLOAD_TYPESCRIPT=1 node --import tsx --test-reporter ./test/reporter.js --test ./test/**/*.ts"

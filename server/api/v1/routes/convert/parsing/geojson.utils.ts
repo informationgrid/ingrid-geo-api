@@ -29,7 +29,7 @@ import deepEqual from 'deep-equal';
 import { GeoJSON, Geometry, GeometryCollection, Point, Polygon } from 'geojson';
 import proj4 from 'proj4';
 import * as xpath from 'xpath';
-import proj4jsMappings from './proj4.json';
+import proj4jsMappings from './proj4.json' with { type: 'json' };
 
 // load proj4js named projections
 proj4.defs(Object.entries(proj4jsMappings) as string[][]);
