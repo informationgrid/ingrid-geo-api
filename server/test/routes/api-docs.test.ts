@@ -38,7 +38,7 @@ describe('GET /api-docs', () => {
     test('GET /api-docs returns status 200', async () => {
         const response = await app.inject({
             method: 'GET',
-            url: '/v1/api-docs'
+            url: '/v1/api-docs/'
         });
         assert.strictEqual(response.statusCode, 200);
     });
