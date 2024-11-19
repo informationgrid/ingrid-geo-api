@@ -11,7 +11,7 @@
     "postbuild": "copyfiles api/**/*.json dist",
     "install-production": "NODE_ENV=production npm ci",
     "dev": "tsx watch ./server.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "FASTIFY_AUTOLOAD_TYPESCRIPT=1 node --import tsx --test test/**/*"
   },
   "keywords": [
     "geojson",
@@ -27,7 +27,7 @@
     "@fastify/swagger": "^9.2.0",
     "@placemarkio/check-geojson": "^0.1.12",
     "@scalar/fastify-api-reference": "^1.25.64",
-    "@sinclair/typebox": "^0.33.16",
+    "@sinclair/typebox": "^0.34.4",
     "@terraformer/wkt": "^2.2.1",
     "@turf/bbox": "^7.1.0",
     "@turf/bbox-polygon": "^7.1.0",
@@ -38,7 +38,7 @@
     "deep-equal": "^2.2.3",
     "fastify": "^5.0.0",
     "geojson-to-gml-3": "^2.0.2",
-    "marked": "^14.1.3",
+    "marked": "^15.0.1",
     "marked-gfm-heading-id": "^4.1.0",
     "proj4": "^2.12.1",
     "read-config-ng": "^3.0.7",
@@ -53,10 +53,10 @@
     "@types/proj4": "^2.5.5",
     "@types/terraformer__wkt": "^2.0.3",
     "copyfiles": "^2.4.1",
-    "eslint": "^9.12.0",
+    "eslint": "^9.15.0",
     "eslint-plugin-license-header": "^0.6.1",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.9.0"
+    "typescript-eslint": "^8.15.0"
   }
 }
