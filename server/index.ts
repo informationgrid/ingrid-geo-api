@@ -48,14 +48,7 @@ export default async function app() {
                 description: 'This is a REST API for the conversion of geodata',
                 version: '0.1.0'
             },
-            servers: [{ url: VERSION_BASE_URL }],
-            tags: [{
-                name: 'Convert',
-                description: 'Endpoints for getting information about the API'
-            }, {
-                name: 'Info',
-                description: 'Endpoints for getting information about the API'
-            }]
+            servers: [{ url: VERSION_BASE_URL }]
         }
     }
     await server.register(swagger, swaggerConfig)

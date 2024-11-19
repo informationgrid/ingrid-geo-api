@@ -30,22 +30,12 @@ export default async (server: FastifyInstance, options: any) => {
     // define content-type parsers
     Object.entries(FORMATS).forEach(([geoFormat, contentTypes]) => {
         server.addContentTypeParser(contentTypes as unknown as string[], { parseAs: 'string' }, (request, body, done) => {
-            if (FORMATS['geojson'].includes(request.headers['content-type']) && !body?.length) {
-                done(new errorCodes.FST_ERR_CTP_EMPTY_JSON_BODY());
-            }
-            try {
-                let parsedBody = ParserFactory.get(geoFormat as GeoFormat).parse(body as string);
-                done(null, parsedBody);
-            }
-            catch (e) {
-                done(new errorCodes.FST_ERR_VALIDATION(e));
-            }
+            parse(geoFormat as GeoFormat, body as string, done);
         });
     });
     server.addContentTypeParser('*', { parseAs: 'string' }, (request, body, done) => {
-        let format = determineFormat(body as string);
-        let parsedBody = ParserFactory.get(format).parse(body as string);
-        done(null, parsedBody);
+        let geoFormat = determineFormat(body as string);
+        parse(geoFormat, body as string, done);
     });
 
     server.post<{ Body: GeoJSON, Querystring: ConversionSettings }>('/', {
@@ -95,5 +85,18 @@ function determineFormat(body: string): GeoFormat {
             return 'gml';
         default:
             return 'wkt';
+    }
+}
+
+function parse(geoFormat: GeoFormat, body: string, done) {
+    try {
+        if (!body?.length) {
+            throw 'Body cannot be empty';
+        }
+        let parsedBody = body?.length ? ParserFactory.get(geoFormat).parse(body) : null;
+        done(null, parsedBody);
+    }
+    catch (e) {
+        done(new errorCodes.FST_ERR_VALIDATION(e));
     }
 }

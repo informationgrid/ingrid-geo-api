@@ -28,7 +28,7 @@ import { GeoParser } from '../GeoParser.js';
 
 const DOM_PARSER = new DOMParser({
     // throw on error, swallow rest
-    errorHandler: (level, msg) => {
+    onError: (level, msg) => {
         if (level == 'error') {
             throw new HttpBadRequestError(`Could not parse GML: ${msg}`);
         }
