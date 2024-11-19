@@ -23,6 +23,7 @@ import assert from 'assert';
 import { FastifyInstance } from 'fastify';
 import { after, before, describe, test } from 'node:test';
 import server from '../../index.js';
+import { assertEqualIgnoreSpaces, readFile } from '../test.utils.js';
 
 describe('POST /convert', () => {
     let app: FastifyInstance;
@@ -47,17 +48,14 @@ describe('POST /convert', () => {
         const response = await app.inject({
             method: 'POST',
             url: '/v1/convert?exportFormat=gml',
-            body: {
-                "type": "Point",
-                "coordinates": [40, 10]
-            }
+            body: readFile('example.json')
         });
         assert.strictEqual(response.statusCode, 200);
-        let expected = '<gml:Point><gml:pos>40 10</gml:pos></gml:Point>';
-        assert.strictEqual(response.body, expected);
+        let expected = readFile('example.xml');
+        assertEqualIgnoreSpaces(response.body, expected);
     });
 
-    test('POST /convert?exportFormat=gml with malformed input fails', async () => {
+    test('POST /convert?exportFormat=gml with malformed input returns status 400', async () => {
         const response = await app.inject({
             method: 'POST',
             url: '/v1/convert?exportFormat=gml',
@@ -65,6 +63,16 @@ describe('POST /convert', () => {
                 "type": "Pointer",
                 "coordinates": [40, 10]
             }
+        });
+        assert.strictEqual(response.statusCode, 400);
+    });
+
+    test('POST /convert?exportFormat=gml without body returns status 400', async () => {
+        const response = await app.inject({
+            method: 'POST',
+            url: '/v1/convert?exportFormat=gml',
+            headers: { 'content-type': 'application/gml+xml' },
+            body: ''
         });
         assert.strictEqual(response.statusCode, 400);
     });
