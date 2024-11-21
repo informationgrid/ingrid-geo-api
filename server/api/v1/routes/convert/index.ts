@@ -40,6 +40,7 @@ export default async (server: FastifyInstance, options: any) => {
 
     server.post<{ Body: GeoJSON, Querystring: ConversionSettings }>('/', {
         schema: {
+            description: 'Converts a given geometry object from and to one of the listed formats. Requires a correct `content-type` header for the payload type - otherwise a simple heuristic is used to deduce it.',
             querystring: {
                 type: 'object',
                 properties: {

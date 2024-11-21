@@ -25,7 +25,11 @@ import { template } from '../../../../utils/utils.js';
 const README = template('Information', '../README.md');
 
 export default async (server: FastifyInstance, options: any) => {
-    server.get('/', async function handler (request, reply) {
+    server.get('/', {
+        schema: {
+            description: 'Returns general information on API use.',
+        }
+    }, async (request, reply) => {
         return reply.header('Content-Type', 'text/html').send(await README);
     });
 }

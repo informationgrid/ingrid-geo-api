@@ -45,8 +45,8 @@ export default async function app() {
             openapi: '3.0.3',
             info: {
                 title: 'Geodata Conversion API',
-                description: 'This is a REST API for the conversion of geodata',
-                version: '0.1.0'
+                description: 'This API converts geometry information from and to various formats. Additionally, it can create centroid and bbox information.',
+                version: config.server.build.version
             },
             servers: [{ url: VERSION_BASE_URL }]
         }
