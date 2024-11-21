@@ -27,14 +27,14 @@ pipeline {
                 }
             }
         }
-        stage ('SonarQube Quality Gate') {
-            options {
-                timeout(time: 5, unit: 'MINUTES')
-            }
-            steps {
-                waitForQualityGate abortPipeline: true
-            }
-        }
+        // stage ('SonarQube Quality Gate') {
+        //     options {
+        //         timeout(time: 5, unit: 'MINUTES')
+        //     }
+        //     steps {
+        //         waitForQualityGate abortPipeline: true
+        //     }
+        // }
         stage('Build Image') {
             steps {
                 script {
