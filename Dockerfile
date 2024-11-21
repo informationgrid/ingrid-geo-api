@@ -25,6 +25,13 @@ FROM building5/dumb-init:1.2.1 AS init
 #
 FROM node:20.18.0-alpine3.20 AS final
 
+ARG version
+ARG commitId
+ARG buildTimestamp
+ENV BUILD_VERSION=$version
+ENV BUILD_COMMIT_ID=$commitId
+ENV BUILD_DATE=$buildTimestamp
+
 # copy init
 COPY --from=init /dumb-init /usr/local/bin/
 

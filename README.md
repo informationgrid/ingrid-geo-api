@@ -18,6 +18,10 @@ Shows API specification and debugging tool.
 
 Returns general information on API use.
 
+### GET `/version`
+
+Returns version information.
+
 ### POST `/convert`
 
 Converts a given geometry object from and to one of the [supported formats](#formats).

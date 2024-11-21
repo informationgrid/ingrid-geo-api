@@ -40,7 +40,9 @@ pipeline {
                 script {
                     // version = snapshotVersionFromGit()
                     // dockerImage = docker.build REGISTRY + ":" + version
-                    dockerImageLatest = docker.build REGISTRY + ":latest"
+                    def commitId = sh(script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
+                    def buildTimestamp = sh(script: "git show -s --format='%cI' ${commitId}", returnStdout: true).trim()
+                    dockerImageLatest = docker.build("${REGISTRY}:latest", "--build-arg commitId='${commitId}' --build-arg buildTimestamp='${buildTimestamp}' .")
                 }
             }
         }
