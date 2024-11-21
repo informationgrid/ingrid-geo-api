@@ -19,18 +19,27 @@
  * ==================================================
  */
 
-import { geojsonToWKT, wktToGeoJSON } from '@terraformer/wkt';
-import { GeoJSON } from 'geojson';
-import { GeoParser } from '../GeoParser.js';
+import assert from 'assert';
+import { FastifyInstance } from 'fastify';
+import { after, before, describe, test } from 'node:test';
+import server from '../../index.js';
 
-export class WktParser implements GeoParser {
+describe('GET /api-docs', () => {
+    let app: FastifyInstance;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    parse(geometry: string, crs?: string): GeoJSON {
-        return wktToGeoJSON(geometry);
-    }
+    before(async () => {
+        app = await server();
+    });
 
-    write(geojson: GeoJSON): string {
-        return geojsonToWKT(geojson);
-    }
-}
+    after(async () => {
+        await app.close()
+    });
+
+    test('GET /api-docs returns status 200', async () => {
+        const response = await app.inject({
+            method: 'GET',
+            url: '/v1/api-docs/'
+        });
+        assert.strictEqual(response.statusCode, 200);
+    });
+});

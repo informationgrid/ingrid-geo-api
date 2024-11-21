@@ -19,18 +19,17 @@
  * ==================================================
  */
 
-import { geojsonToWKT, wktToGeoJSON } from '@terraformer/wkt';
-import { GeoJSON } from 'geojson';
-import { GeoParser } from '../GeoParser.js';
+import assert from 'node:assert';
+import { readFileSync } from 'node:fs';
 
-export class WktParser implements GeoParser {
+export function readFile(file: string) {
+    return readFileSync(import.meta.dirname + `/resources/${file}`).toString();
+}
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    parse(geometry: string, crs?: string): GeoJSON {
-        return wktToGeoJSON(geometry);
-    }
+export function assertEqualIgnoreSpaces(actual: string, expected: string) {
+    return assert.strictEqual(removeSpaces(actual), removeSpaces(expected));
+}
 
-    write(geojson: GeoJSON): string {
-        return geojsonToWKT(geojson);
-    }
+function removeSpaces(haystack: string) {
+    return haystack.replaceAll(/\s/g, '');
 }

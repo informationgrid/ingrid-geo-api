@@ -1,0 +1,17 @@
+<gml:MultiGeometry>
+    <gml:geometryMembers>
+        <gml:Point>
+            <gml:pos>40 10</gml:pos>
+        </gml:Point>
+        <gml:LineString>
+            <gml:posList>10 40 20 20 10 10</gml:posList>
+        </gml:LineString>
+        <gml:Polygon>
+            <gml:exterior>
+                <gml:LinearRing>
+                    <gml:posList>40 40 20 45 45 30 40 40</gml:posList>
+                </gml:LinearRing>
+            </gml:exterior>
+        </gml:Polygon>
+    </gml:geometryMembers>
+</gml:MultiGeometry>

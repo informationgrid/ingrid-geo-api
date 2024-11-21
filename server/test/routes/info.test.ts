@@ -19,13 +19,37 @@
  * ==================================================
  */
 
+import assert from 'assert';
 import { FastifyInstance } from 'fastify';
-import { template } from '../../../../utils/utils.js';
+import { after, before, describe, test } from 'node:test';
+import server from '../../index.js';
+import { template } from '../../utils/utils.js';
 
-const README = template('Information', '../README.md');
+describe('GET /info', () => {
+    let app: FastifyInstance;
 
-export default async (server: FastifyInstance, options: any) => {
-    server.get('/', async function handler (request, reply) {
-        return reply.header('Content-Type', 'text/html').send(await README);
+    before(async () => {
+        app = await server();
     });
-}
+
+    after(async () => {
+        await app.close()
+    });
+
+    test('GET /info returns status 200', async () => {
+        const response = await app.inject({
+            method: 'GET',
+            url: '/v1/info'
+        });
+        assert.strictEqual(response.statusCode, 200);
+    });
+
+    test('GET /info returns README as HTML', async () => {
+        const response = await app.inject({
+            method: 'GET',
+            url: '/v1/info'
+        });
+        let expected = await template('Information', '../README.md');
+        assert.strictEqual(response.body, expected);
+    });
+});

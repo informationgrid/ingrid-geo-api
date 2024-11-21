@@ -1,18 +1,16 @@
 /**
  * ==================================================
- * geo-conversion-api
- * ==================================================
  * Copyright (C) 2024 wemove digital solutions GmbH
  * ==================================================
  * Licensed under the EUPL, Version 1.2 or - as soon they will be
  * approved by the European Commission - subsequent versions of the
  * EUPL (the "Licence");
- * 
+ *
  * You may not use this work except in compliance with the Licence.
  * You may obtain a copy of the Licence at:
- * 
+ *
  * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,9 +19,8 @@
  * ==================================================
  */
 
-import { FastifyInstance } from 'fastify';
+import { errorCodes, FastifyInstance } from 'fastify';
 import { GeoJSON } from 'geojson';
-import { HttpBadRequestError } from '../../../../utils/utils.js';
 import { ConversionSettings, convert } from './GeoConverter.js';
 import { ParserFactory } from './parsing/ParserFactory.js';
 import { FORMATS, GeoFormat, MODES } from './types.js';
@@ -33,22 +30,12 @@ export default async (server: FastifyInstance, options: any) => {
     // define content-type parsers
     Object.entries(FORMATS).forEach(([geoFormat, contentTypes]) => {
         server.addContentTypeParser(contentTypes as unknown as string[], { parseAs: 'string' }, (request, body, done) => {
-            if (!body?.length) {
-                done(new HttpBadRequestError('POST body was not specified'));
-            }
-            try {
-                let parsedBody = ParserFactory.get(geoFormat as GeoFormat).parse(body as string);
-                done(null, parsedBody);
-            }
-            catch (e) {
-                done(new HttpBadRequestError(e));
-            }
+            parse(geoFormat as GeoFormat, body as string, done);
         });
     });
     server.addContentTypeParser('*', { parseAs: 'string' }, (request, body, done) => {
-        let format = determineFormat(body as string);
-        let parsedBody = ParserFactory.get(format).parse(body as string);
-        done(null, parsedBody);
+        let geoFormat = determineFormat(body as string);
+        parse(geoFormat, body as string, done);
     });
 
     server.post<{ Body: GeoJSON, Querystring: ConversionSettings }>('/', {
@@ -98,5 +85,18 @@ function determineFormat(body: string): GeoFormat {
             return 'gml';
         default:
             return 'wkt';
+    }
+}
+
+function parse(geoFormat: GeoFormat, body: string, done) {
+    try {
+        if (!body?.length) {
+            throw 'Body cannot be empty';
+        }
+        let parsedBody = body?.length ? ParserFactory.get(geoFormat).parse(body) : null;
+        done(null, parsedBody);
+    }
+    catch (e) {
+        done(new errorCodes.FST_ERR_VALIDATION(e));
     }
 }

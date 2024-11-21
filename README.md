@@ -58,7 +58,7 @@ Example `GeoJSON`:
         },
         {
             "type": "LineString",
-            "coordinates": [[10, 10], [20, 20], [10, 40]]
+            "coordinates": [[10, 40], [20, 20], [10, 10]]
         },
         {
             "type": "Polygon",
@@ -76,7 +76,7 @@ Example `GML`:
             <gml:pos>40 10</gml:pos>
         </gml:Point>
         <gml:LineString>
-            <gml:posList>10 10 20 20 10 40</gml:posList>
+            <gml:posList>10 40 20 20 10 10</gml:posList>
         </gml:LineString>
         <gml:Polygon>
             <gml:exterior>
@@ -92,7 +92,7 @@ Example `GML`:
 Example `WKT`:
 ```
 GEOMETRYCOLLECTION (POINT (40 10),
-LINESTRING (10 10, 20 20, 10 40),
+LINESTRING (10 40, 20 20, 10 10),
 POLYGON ((40 40, 20 45, 45 30, 40 40)))
 ```
 

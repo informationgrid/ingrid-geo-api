@@ -1,18 +1,16 @@
 /**
  * ==================================================
- * geo-conversion-api
- * ==================================================
  * Copyright (C) 2024 wemove digital solutions GmbH
  * ==================================================
  * Licensed under the EUPL, Version 1.2 or - as soon they will be
  * approved by the European Commission - subsequent versions of the
  * EUPL (the "Licence");
- * 
+ *
  * You may not use this work except in compliance with the Licence.
  * You may obtain a copy of the Licence at:
- * 
+ *
  * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +21,7 @@
 
 import bbox from '@turf/bbox';
 import bboxPolygon from '@turf/bbox-polygon';
+import booleanClockwise from '@turf/boolean-clockwise';
 import centroid from '@turf/centroid';
 import { AllGeoJSON } from '@turf/helpers';
 import rewind from '@turf/rewind';
@@ -36,7 +35,15 @@ import proj4jsMappings from './proj4.json';
 proj4.defs(Object.entries(proj4jsMappings) as string[][]);
 
 function transformer(crs: string = 'WGS84'): (x: number, y: number) => number[] {
+    // shortcut: don't transform if inputCRS = outputCRS!
+    if (crs == 'WGS84') {
+        return (x: number, y: number) => [x, y];
+    }
     return (x: number, y: number) => proj4(crs, 'WGS84').forward([x, y]);
+}
+
+function ensureClockwise(geometry: AllGeoJSON) {
+    return booleanClockwise(geometry as any) ? geometry : rewind(geometry);
 }
 
 // TODO
@@ -380,7 +387,7 @@ export function parseGml(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [
                     coordinates: parsePoint(_, opts, childCtx)
                 };
             case 'gml:LineString':
-                return rewind({
+                return ensureClockwise({
                     type: 'LineString',
                     coordinates: parseLinearRingOrLineString(_, opts, childCtx)
                 }) as Geometry;
@@ -393,17 +400,17 @@ export function parseGml(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [
                 // same as polygon
             // eslint-disable-next-line no-fallthrough
             case 'gml:Polygon':
-                return rewind({
+                return ensureClockwise({
                     type: 'Polygon',
                     coordinates: parsePolygonOrRectangle(_, opts, childCtx)
                 }) as Geometry;
             case 'gml:Surface':
-                return rewind({
+                return ensureClockwise({
                     type: 'MultiPolygon',
                     coordinates: parseSurface(_, opts, childCtx)
                 }) as Geometry;
             case 'gml:MultiSurface':
-                return rewind({
+                return ensureClockwise({
                     type: 'MultiPolygon',
                     coordinates: parseMultiSurface(_, opts, childCtx)
                 }) as Geometry;
