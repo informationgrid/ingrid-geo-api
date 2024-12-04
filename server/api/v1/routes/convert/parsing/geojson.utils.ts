@@ -46,11 +46,6 @@ function ensureClockwise(geometry: AllGeoJSON) {
     return booleanClockwise(geometry as any) ? geometry : rewind(geometry);
 }
 
-// TODO
-export function convert(geojson: any, exportCRS: string) {
-    return geojson;
-}
-
 export function getBbox(spatial: AllGeoJSON): Point | Polygon | undefined {
     if (!spatial) {
         return undefined;
@@ -77,31 +72,143 @@ export function getCentroid(spatial: Geometry | GeometryCollection): Point | und
     return centroid(modifiedSpatial)?.geometry;
 }
 
-export function getBoundingBox(lowerCorner: string, upperCorner: string, crs?: string) {
-    const transformCoords = transformer(crs);
-    let [west, south] = transformCoords(...lowerCorner.trim().split(' ').map(parseFloat) as [number, number]);
-    let [east, north] = transformCoords(...upperCorner.trim().split(' ').map(parseFloat) as [number, number]);
+/**
+ * Project a GeoJSON from a given reference system to another.
+ * 
+ * For origin and licensing information, see NOTES.md
+ * 
+ * @param geojson geometry to project from one CRS to another
+ * @param importCRS input reference system
+ * @param exportCRS output reference system
+ * @returns a reprojection of the original geometry
+ */
+export function project(geojson: GeoJSON, importCRS: string, exportCRS: string): GeoJSON {
+    const reproject = (coords: number[]) => proj4(importCRS, exportCRS).forward(coords);
 
-    if (west === east && north === south) {
-        return {
-            'type': 'point',
-            'coordinates': [west, north]
-        };
-    }
-    else if (west === east || north === south) {
-        return {
-            'type': 'linestring',
-            'coordinates': [[west, north], [east, south]]
-        };
-    }
-    else {
-        return {
-            'type': 'Polygon',
-            'coordinates': [[[west, north], [west, south], [east, south], [east, north], [west, north]]]
-        };
-    }
+    const reprojectLine = (coords, options) => {
+        let densify =
+            typeof options === "object" && typeof options.densify === "number"
+            ? options.densify
+            : 0;
+        const strategy =
+            typeof options === "object" && typeof options.strategy === "string"
+            ? options.strategy
+            : "auto";
+        
+        // just in case densify isn't a round number
+        densify = Math.round(densify);
+        
+        // algorithm
+        // drop point when the slope changes (and at the end)
+        const out = [];
+        
+        let [xprev, yprev] = reproject(coords[0]);
+        let mprev = null;
+        let m = null;
+        
+        for (let i = 1; i < coords.length; i++) {
+            const [x1, y1] = coords[i - 1];
+            const [x2, y2] = coords[i];
+        
+            const xdist = x2 - x1;
+            const ydist = y2 - y1;
+        
+            const xstep = xdist / (densify + 1);
+            const ystep = ydist / (densify + 1);
+        
+            for (let ii = 1; ii <= densify; ii++) {
+                const [rx, ry] = reproject([x1 + ii * xstep, y1 + ii * ystep]);
+                m = (ry - yprev) / (rx - xprev);
+            
+                if (strategy === "always" || m !== mprev) {
+                    out.push([xprev, yprev]);
+                    mprev = m;
+                }
+                xprev = rx;
+                yprev = ry;
+            }
+
+            // try with last coord in segment
+            const [rx2, ry2] = reproject([x2, y2]);
+            m = (ry2 - yprev) / (rx2 - xprev);
+
+            // if slope changes, drop point
+            if (strategy === "always" || m !== mprev) {
+                out.push([xprev, yprev]);
+                mprev = m;
+            }
+
+            xprev = rx2;
+            yprev = ry2;
+        }
+
+        // drop last point
+        out.push([xprev, yprev]);
+
+        return out;
+    };
+
+    const reprojectGeoJSONPluggable = (geojson: GeoJSON, { densify }) => {
+        if (geojson.type === "FeatureCollection") {
+            return {
+                ...geojson,
+                features: geojson.features.map(feature => reprojectGeoJSONPluggable(feature, { densify }))
+            };
+        } else if (geojson.type === "Feature") {
+            return {
+                ...geojson,
+                geometry: reprojectGeoJSONPluggable(geojson.geometry, { densify })
+            };
+        } else if (geojson.type === "LineString") {
+            return {
+                ...geojson,
+                coordinates: reprojectLine(geojson.coordinates, { densify })
+            };
+        } else if (geojson.type === "MultiLineString") {
+            return {
+                ...geojson,
+                coordinates: geojson.coordinates.map(line => reprojectLine(line, { densify }))
+            };
+        } else if (geojson.type === "MultiPoint") {
+            return {
+                ...geojson,
+                coordinates: geojson.coordinates.map(point => reproject(point))
+            };
+        } else if (geojson.type === "MultiPolygon") {
+            return {
+                ...geojson,
+                coordinates: geojson.coordinates.map(polygon => {
+                    return polygon.map(ring => reprojectLine(ring, { densify }));
+                })
+            };
+        } else if (geojson.type === "Point") {
+            return {
+                ...geojson,
+                coordinates: reproject(geojson.coordinates)
+            };
+        } else if (geojson.type === "Polygon") {
+            return {
+                ...geojson,
+                coordinates: geojson.coordinates.map(ring => reprojectLine(ring, { densify }))
+            };
+        }
+        return geojson;
+    };
+
+    exportCRS = exportCRS.toLowerCase().replace('epsg:', '');
+    return reprojectGeoJSONPluggable(geojson, { densify: null });
 }
 
+/**
+ * Parse a GML snippet into a GeoJSON object.
+ * 
+ * For origin and licensing information, see NOTES.md
+ * 
+ * @param _ the XML DOM node to parse
+ * @param opts 
+ * @param nsMap prefix-to-uri map of namespaces used in the original snippet
+ * @returns 
+ */
 export function parseGml(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ name: string ]: string; }): GeoJSON {
     if (_ == null) {
         return null;
