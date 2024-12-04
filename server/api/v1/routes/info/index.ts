@@ -24,7 +24,7 @@ import { template } from '../../../../utils/utils.js';
 
 const README = template('Information', '../README.md');
 
-export default async (server: FastifyInstance, options: any) => {
+export default async (server: FastifyInstance) => {
     server.get('/', {
         schema: {
             description: 'Returns general information on API use.',

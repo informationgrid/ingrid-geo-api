@@ -214,7 +214,7 @@ export function project(geojson: GeoJSON, importCRS: string, exportCRS: string):
  * @param nsMap prefix-to-uri map of namespaces used in the original snippet
  * @returns 
  */
-export function parseGml(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ name: string ]: string; }): GeoJSON {
+export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: ParseOptions = { stride: 2 }): GeoJSON {
     if (_ == null) {
         return null;
     }
@@ -472,7 +472,7 @@ export function parseGml(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [
     const parseMultiGeometry = (_: Node, opts: ParseOptions, ctx: Context = {}) => {
         const geometries: Geometry[] = [];
         Object.values(select('.//gml:geometryMembers/*|.//gml:geometryMember/*', _)).forEach((c: Element) => {
-            geometries.push(parseGml(c, opts, nsMap) as Geometry);
+            geometries.push(parseGml(c, nsMap, opts) as Geometry);
         });
 
         if (geometries.length === 0) {

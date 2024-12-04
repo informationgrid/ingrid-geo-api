@@ -37,16 +37,15 @@ const DOM_PARSER = new DOMParser({
 
 export class GmlParser implements GeoParser {
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    parse(geometry: string, crs?: string): GeoJSON {
-        // if the gml snippet does not contain namespace information, add it manually
+    parse(geometry: string): GeoJSON {
+        // if the gml snippet does not contain namespace information, add it manually for parsing
         if (!geometry.includes('xmlns:gml')) {
             geometry = geometry.replace('>', ' xmlns:gml="http://www.opengis.net/gml/3.2">');
         }
         let dom = DOM_PARSER.parseFromString(geometry, 'application/xml');
         // @ts-expect-error xmldom uses own Node/Element implementations, which are compatible
         // see https://github.com/xmldom/xmldom/issues/724
-        return parseGml(dom.documentElement, undefined, { 'gml': 'http://www.opengis.net/gml/3.2' });
+        return parseGml(dom.documentElement, { 'gml': 'http://www.opengis.net/gml/3.2' });
     }
 
     write(geojson: GeoJSON): string {

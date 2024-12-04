@@ -22,7 +22,7 @@
 import { FastifyInstance } from 'fastify';
 import config from '../../../../config.js';
 
-export default async (server: FastifyInstance, options: any) => {
+export default async (server: FastifyInstance) => {
     server.get('/', {
         schema: {
             description: 'Returns version information.',

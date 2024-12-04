@@ -25,11 +25,9 @@ import { GeoParser } from '../GeoParser.js';
 
 export class GeoJsonParser implements GeoParser {
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    parse(geometry: string, crs?: string): GeoJSON {
-        // use @placemarkio/check-geojson instead of JSON.parse because it validates GeoJSON
-        // return JSON.parse(geometry);
+    parse(geometry: string): GeoJSON {
         try {
+            // use @placemarkio/check-geojson instead of JSON.parse because it validates GeoJSON
             return check(geometry);
         }
         catch (e) {

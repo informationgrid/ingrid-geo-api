@@ -25,8 +25,7 @@ import { GeoParser } from '../GeoParser.js';
 
 export class WktParser implements GeoParser {
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    parse(geometry: string, crs?: string): GeoJSON {
+    parse(geometry: string): GeoJSON {
         return wktToGeoJSON(geometry);
     }
 

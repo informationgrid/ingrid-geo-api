@@ -26,7 +26,7 @@ import { assertEqualIgnoreSpaces, readFile } from '../test.utils.js';
 
 describe('Mode tests', () => {
 
-    const geojsonParser = ParserFactory.get('geojson');
+    // const geojsonParser = ParserFactory.get('geojson');
     const gmlParser = ParserFactory.get('gml');
     const wktParser = ParserFactory.get('wkt');
 

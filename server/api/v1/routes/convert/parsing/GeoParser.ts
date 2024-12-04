@@ -22,19 +22,20 @@
 import { GeoJSON } from 'geojson';
 
 export interface GeoParser {
-    /**
-     * Parse a GeoJSON from a given geometry string.
-     * 
-     * @param geometry string representing a geometry in this parser's format
-     * @param crs coordinate reference system of the input geometry
-     * @returns a GeoJSON representation of the input geometry string
-     */
-    parse(geometry: string, crs?: string): GeoJSON;
 
     /**
-     * Returns a string representation of this parser's format.
+     * Parse a GeoJSON object from a given geometry string.
+     * 
+     * @param geometry string representing a geometry in this parser's format
+     * @returns a GeoJSON representation of the input geometry string
+     */
+    parse(geometry: string): GeoJSON;
+
+    /**
+     * Returns a string representation of a given GeoJSON object in this parser's format.
      * 
      * @param geojson GeoJSON to convert to this parser's format
+     * @returns a string representation of the input geometry
      */
     write(geojson: GeoJSON): string;
 }

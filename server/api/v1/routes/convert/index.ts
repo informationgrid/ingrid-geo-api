@@ -25,7 +25,7 @@ import { ConversionSettings, convert, DEFAULT_CRS } from './GeoConverter.js';
 import { ParserFactory } from './parsing/ParserFactory.js';
 import { FORMATS, GeoFormat, MODES } from './types.js';
 
-export default async (server: FastifyInstance, options: any) => {
+export default async (server: FastifyInstance) => {
 
     // define content-type parsers
     Object.entries(FORMATS).forEach(([geoFormat, contentTypes]) => {
