@@ -1,7 +1,7 @@
 #
 # IMAGE: build server
 #
-FROM node:20.18.0-alpine3.20 AS build-server
+FROM node:20.18.1-alpine3.20 AS build-server
 LABEL stage=build
 
 # install build dependencies
@@ -23,7 +23,7 @@ FROM building5/dumb-init:1.2.1 AS init
 #
 # IMAGE: final
 #
-FROM node:20.18.0-alpine3.20 AS final
+FROM node:20.18.1-alpine3.20 AS final
 
 ARG version
 ARG commitId
