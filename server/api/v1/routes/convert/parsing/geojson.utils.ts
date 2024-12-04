@@ -159,6 +159,11 @@ export function project(geojson: GeoJSON, importCRS: string, exportCRS: string):
                 ...geojson,
                 geometry: reprojectGeoJSONPluggable(geojson.geometry, { densify })
             };
+        } else if (geojson.type === "GeometryCollection") {
+            return {
+                ...geojson,
+                geometries: geojson.geometries.map(geometry => reprojectGeoJSONPluggable(geometry, { densify }))
+            };
         } else if (geojson.type === "LineString") {
             return {
                 ...geojson,
