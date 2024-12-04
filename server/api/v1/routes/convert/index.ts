@@ -21,7 +21,7 @@
 
 import { errorCodes, FastifyInstance } from 'fastify';
 import { GeoJSON } from 'geojson';
-import { ConversionSettings, convert } from './GeoConverter.js';
+import { ConversionSettings, convert, DEFAULT_CRS } from './GeoConverter.js';
 import { ParserFactory } from './parsing/ParserFactory.js';
 import { FORMATS, GeoFormat, MODES } from './types.js';
 
@@ -44,14 +44,20 @@ export default async (server: FastifyInstance, options: any) => {
             querystring: {
                 type: 'object',
                 properties: {
+                    importCRS: {
+                        type: 'string',
+                        default: DEFAULT_CRS
+                    },
                     exportFormat: {
                         enum: Object.keys(FORMATS)
                     },
                     exportCRS: {
-                        type: 'string'
+                        type: 'string',
+                        default: DEFAULT_CRS
                     },
                     mode: {
-                        enum: MODES
+                        enum: MODES,
+                        default: 'full'
                     }
                 },
                 required: ['exportFormat']

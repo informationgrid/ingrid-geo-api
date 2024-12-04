@@ -24,12 +24,12 @@ import { getBbox, getCentroid, project } from './parsing/geojson.utils.js';
 import { ParserFactory } from './parsing/ParserFactory.js';
 import { ConversionMode, GeoFormat } from './types.js';
 
-const DEFAULT_CRS = 'WGS84';
+export const DEFAULT_CRS = 'WGS84';
 
 export interface ConversionSettings {
-    importCRS?: string,
+    importCRS: string,
     exportFormat: GeoFormat,
-    exportCRS?: string,
+    exportCRS: string,
     mode: ConversionMode
 }
 

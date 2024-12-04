@@ -32,14 +32,14 @@ describe('Mode tests', () => {
 
     test('Return centroid for GML', async () => {
         let geojson = gmlParser.parse(readFile('example.xml'));
-        let actual = convert(geojson, { exportFormat: 'gml', mode: 'centroid' });
+        let actual = convert(geojson, { importCRS: 'WGS84', exportFormat: 'gml', exportCRS: 'WGS84', mode: 'centroid' });
         let expected = '<gml:Point><gml:pos>26.42857142857142727.857142857142858</gml:pos></gml:Point>';
         assertEqualIgnoreSpaces(actual, expected);
     });
 
     test('Return bounding box for WKT', async () => {
         let geojson = wktParser.parse(readFile('example.wkt'));
-        let actual = convert(geojson, { exportFormat: 'geojson', mode: 'bbox' });
+        let actual = convert(geojson, { importCRS: 'WGS84', exportFormat: 'geojson', exportCRS: 'WGS84', mode: 'bbox' });
         let expected = '{"type":"Polygon","coordinates":[[[10,10],[45,10],[45,45],[10,45],[10,10]]]}';
         assertEqualIgnoreSpaces(actual, expected);
     });

@@ -43,8 +43,8 @@ Required:
 * `exportFormat` - One of [`geojson`, `gml`, `wkt`]
 
 Optional:
-* `importCRS` - TODO
-* `exportCRS` - TODO
+* `importCRS` - Name of the reference system of the input geometry. Defaults to `WGS84`
+* `exportCRS` - Name of the reference system of the output geometry. Defaults to `WGS84`
 * `mode` - One of [`full`, `centroid`, `bbox`]. Defaults to `full`
 
 #### Body
