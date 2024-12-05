@@ -21,6 +21,7 @@
 
 import { errorCodes, FastifyInstance } from 'fastify';
 import { GeoJSON } from 'geojson';
+import { HttpBadRequestError } from '../../../../utils/utils.js';
 import { ConversionSettings, convert, DEFAULT_CRS } from './GeoConverter.js';
 import { ParserFactory } from './parsing/ParserFactory.js';
 import { FORMATS, GeoFormat, MODES } from './types.js';
@@ -29,13 +30,13 @@ export default async (server: FastifyInstance) => {
 
     // define content-type parsers
     Object.entries(FORMATS).forEach(([geoFormat, contentTypes]) => {
-        server.addContentTypeParser(contentTypes as unknown as string[], { parseAs: 'string' }, (request, body, done) => {
-            parse(geoFormat as GeoFormat, body as string, done);
+        server.addContentTypeParser(contentTypes, { parseAs: 'string' }, (request, body: string, done) => {
+            parse(geoFormat as GeoFormat, body, done);
         });
     });
-    server.addContentTypeParser('*', { parseAs: 'string' }, (request, body, done) => {
-        let geoFormat = determineFormat(body as string);
-        parse(geoFormat, body as string, done);
+    server.addContentTypeParser('*', { parseAs: 'string' }, (request, body: string, done) => {
+        let geoFormat = determineFormat(body);
+        parse(geoFormat, body, done);
     });
 
     server.post<{ Body: GeoJSON, Querystring: ConversionSettings }>('/', {
@@ -64,21 +65,11 @@ export default async (server: FastifyInstance) => {
             }
         }
     }, async ({ body, query }, reply) => {
-        try {
-            // set content-type
-            reply = reply.header('Content-Type', FORMATS[query.exportFormat][0]);
-            // create response
-            let replyBody = convert(body, query);
-            return reply.send(replyBody);
-        }
-        catch (e) {
-            if (e instanceof Error) {
-                return reply.header('Content-Type', 'text/plain').status(e.cause as number).send(e.message);
-            }
-            else {
-                return reply.header('Content-Type', 'text/plain').status(500).send(e);
-            }
-        }
+        // set content-type
+        reply = reply.header('Content-Type', FORMATS[query.exportFormat][0]);
+        // create response
+        let replyBody = convert(body, query);
+        return reply.send(replyBody);
     });
 }
 
@@ -96,11 +87,11 @@ function determineFormat(body: string): GeoFormat {
 }
 
 function parse(geoFormat: GeoFormat, body: string, done) {
+    if (!body?.length) {
+        throw HttpBadRequestError('Body cannot be empty');
+    }
     try {
-        if (!body?.length) {
-            throw 'Body cannot be empty';
-        }
-        let parsedBody = body?.length ? ParserFactory.get(geoFormat).parse(body) : null;
+        let parsedBody = ParserFactory.get(geoFormat).parse(body);
         done(null, parsedBody);
     }
     catch (e) {

@@ -51,7 +51,21 @@ export default async function app() {
             servers: [{ url: VERSION_BASE_URL }]
         }
     }
-    await server.register(swagger, swaggerConfig)
+    await server.register(swagger, swaggerConfig);
+
+    server.setErrorHandler((error, request, reply) => {
+        let message: string = error.message;
+        let statusCode = 500;
+        if (error instanceof Error) {
+            if ('cause' in error && typeof(error.cause) === 'number') {
+                statusCode = error.cause;
+            }
+            else if ('statusCode' in error && typeof(error.statusCode) === 'number') {
+                statusCode = error.statusCode;
+            }
+        }
+        return reply.header('Content-Type', 'text/plain').status(statusCode).send(message);
+    });
 
     // register routes
     const routesBaseDir = path.resolve(import.meta.dirname, `api/${version}/routes`);

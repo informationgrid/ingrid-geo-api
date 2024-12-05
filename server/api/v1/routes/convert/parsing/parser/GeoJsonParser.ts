@@ -35,7 +35,7 @@ export class GeoJsonParser implements GeoParser {
             if (!issue) {
                 throw e;
             }
-            throw `${issue.message} [${issue.from},${issue.to}]`;
+            throw new Error(`${issue.message} [${issue.from},${issue.to}]`);
         }
     }
 

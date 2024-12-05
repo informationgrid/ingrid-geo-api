@@ -29,6 +29,8 @@ import deepEqual from 'deep-equal';
 import { GeoJSON, Geometry, GeometryCollection, Point, Polygon } from 'geojson';
 import proj4 from 'proj4';
 import * as xpath from 'xpath';
+import { HttpBadRequestError } from '../../../../../utils/utils.js';
+import { DEFAULT_CRS } from '../GeoConverter.js';
 import proj4jsMappings from './proj4.json' with { type: 'json' };
 
 // load proj4js named projections
@@ -83,6 +85,16 @@ export function getCentroid(spatial: Geometry | GeometryCollection): Point | und
  * @returns a reprojection of the original geometry
  */
 export function project(geojson: GeoJSON, importCRS: string, exportCRS: string): GeoJSON {
+
+    if (importCRS != DEFAULT_CRS && !(importCRS in proj4jsMappings)) {
+        throw new HttpBadRequestError(`importCRS "${importCRS}" is not supported`);
+    }
+    if (exportCRS != DEFAULT_CRS && !(exportCRS.replace('EPSG:', '') in proj4jsMappings)) {
+        throw new HttpBadRequestError(`exportCRS "${exportCRS}" is not supported`);
+    }
+
+    exportCRS = exportCRS.replace('EPSG:', '');
+
     const reproject = (coords: number[]) => proj4(importCRS, exportCRS).forward(coords);
 
     const reprojectLine = (coords, options) => {
@@ -200,7 +212,6 @@ export function project(geojson: GeoJSON, importCRS: string, exportCRS: string):
         return geojson;
     };
 
-    exportCRS = exportCRS.toLowerCase().replace('epsg:', '');
     return reprojectGeoJSONPluggable(geojson, { densify: null });
 }
 
