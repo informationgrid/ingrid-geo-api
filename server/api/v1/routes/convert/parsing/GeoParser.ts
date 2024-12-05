@@ -35,7 +35,8 @@ export interface GeoParser {
      * Returns a string representation of a given GeoJSON object in this parser's format.
      * 
      * @param geojson GeoJSON to convert to this parser's format
-     * @returns a string representation of the input geometry
+     * @param crs reference system of the output geometry
+     * @returns a string representation of the input geometry in this parser's format
      */
-    write(geojson: GeoJSON): string;
+    write(geojson: GeoJSON, crs?: string): string;
 }

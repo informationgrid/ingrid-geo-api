@@ -23,6 +23,7 @@ import { DOMParser } from '@xmldom/xmldom';
 import { GeoJSON } from 'geojson';
 import { geomToGml } from 'geojson-to-gml-3';
 import { HttpBadRequestError } from '../../../../../../utils/utils.js';
+import { DEFAULT_CRS } from '../../GeoConverter.js';
 import { parseGml } from '../geojson.utils.js';
 import { GeoParser } from '../GeoParser.js';
 
@@ -48,7 +49,12 @@ export class GmlParser implements GeoParser {
         return parseGml(dom.documentElement, { 'gml': 'http://www.opengis.net/gml/3.2' });
     }
 
-    write(geojson: GeoJSON): string {
-        return geomToGml(geojson);
+    write(geojson: GeoJSON, crs: string): string {
+        let gml: string = geomToGml(geojson);
+        // add srsName if given
+        if (crs && crs != DEFAULT_CRS) {
+            gml = gml.replace('>', ` srsName="${crs}">`);
+        }
+        return gml;
     }
 }

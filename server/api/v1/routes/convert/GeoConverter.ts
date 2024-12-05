@@ -43,5 +43,5 @@ export function convert(geojson: GeoJSON, { importCRS, exportFormat, exportCRS, 
     if (importCRS != DEFAULT_CRS || exportCRS != DEFAULT_CRS) {
         geojson = project(geojson, importCRS, exportCRS);
     }
-    return ParserFactory.get(exportFormat).write(geojson);
+    return ParserFactory.get(exportFormat).write(geojson, exportCRS);
 }
