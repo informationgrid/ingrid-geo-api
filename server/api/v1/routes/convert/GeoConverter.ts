@@ -19,7 +19,7 @@
  * ==================================================
  */
 
-import { GeoJSON, Geometry, GeometryCollection, Point } from 'geojson';
+import { GeoJSON } from 'geojson';
 import { getBbox, getCentroid, project } from './parsing/geojson.utils.js';
 import { ParserFactory } from './parsing/ParserFactory.js';
 import { ConversionMode, GeoFormat } from './types.js';
@@ -35,10 +35,10 @@ export interface ConversionSettings {
 
 export function convert(geojson: GeoJSON, { importCRS, exportFormat, exportCRS, mode }: ConversionSettings): string {
     if (mode == 'bbox') {
-        geojson = getBbox(geojson) as GeoJSON;
+        geojson = getBbox(geojson);
     }
     else if (mode == 'centroid') {
-        geojson = getCentroid(geojson as Geometry | GeometryCollection) as Point;
+        geojson = getCentroid(geojson);
     }
     if (importCRS != DEFAULT_CRS || exportCRS != DEFAULT_CRS) {
         geojson = project(geojson, importCRS, exportCRS);

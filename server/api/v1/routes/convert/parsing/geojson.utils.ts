@@ -23,7 +23,6 @@ import bbox from '@turf/bbox';
 import bboxPolygon from '@turf/bbox-polygon';
 import booleanClockwise from '@turf/boolean-clockwise';
 import centroid from '@turf/centroid';
-import { AllGeoJSON } from '@turf/helpers';
 import rewind from '@turf/rewind';
 import deepEqual from 'deep-equal';
 import { GeoJSON, Geometry, GeometryCollection, LineString, MultiPolygon, Point, Polygon, Position } from 'geojson';
@@ -34,7 +33,7 @@ import { DEFAULT_CRS } from '../GeoConverter.js';
 import proj4jsMappings from './proj4.json' with { type: 'json' };
 
 // load proj4js named projections
-proj4.defs(Object.entries(proj4jsMappings) as string[][]);
+proj4.defs(Object.entries(proj4jsMappings));
 
 function transformer(crs: string = 'WGS84'): (x: number, y: number) => number[] {
     // shortcut: don't transform if inputCRS = outputCRS!
@@ -67,32 +66,33 @@ function isClockwise(geojson: LineString | Polygon | MultiPolygon): boolean {
     }
 }
 
-function ensureClockwise(geojson: LineString | Polygon | MultiPolygon): GeoJSON {
-    return isClockwise(geojson) ? geojson : rewind(geojson);
+function ensureClockwise(geojson: LineString | Polygon | MultiPolygon): Geometry {
+    return isClockwise(geojson) ? geojson : rewind(geojson) as Geometry;
 }
 
-export function getBbox(spatial: AllGeoJSON): Point | Polygon | undefined {
-    if (!spatial) {
+export function getBbox(geojson: GeoJSON): Point | Polygon {
+    if (!geojson) {
         return undefined;
     }
-    if (spatial?.type == 'Point') {
-        return spatial;
+    if (geojson.type == 'Point') {
+        return geojson;
     }
-    return bboxPolygon(bbox(spatial))?.geometry;
+    return bboxPolygon(bbox(geojson))?.geometry;
 }
 
-export function getCentroid(spatial: Geometry | GeometryCollection): Point | undefined {
-    if (!spatial) {
+export function getCentroid(geojson: GeoJSON): Point {
+    if (!geojson) {
         return undefined;
     }
-    let modifiedSpatial = { ...spatial };
+    let modifiedSpatial = { ...geojson };
     // turf/centroid does not support envelope, so we turn it into a linestring which has the same centroid
     if (modifiedSpatial.type?.toLowerCase() == 'envelope') {
         modifiedSpatial.type = 'LineString';
     }
     if (modifiedSpatial.type == 'GeometryCollection') {
-        // @ts-expect-error we will check for Envelope, just to be sure
-        (<GeometryCollection>modifiedSpatial).geometries.filter((geometry: AllGeoJSON) => geometry.type == 'Envelope').forEach((geometry: AllGeoJSON) => geometry.type = 'LineString');
+        (<GeometryCollection>modifiedSpatial).geometries
+            .filter((geometry: GeoJSON | Envelope) => geometry.type.toLowerCase() == 'envelope')
+            .forEach((geometry: GeoJSON | Envelope) => geometry.type = 'LineString');
     }
     return centroid(modifiedSpatial)?.geometry;
 }
@@ -248,7 +248,7 @@ export function project(geojson: GeoJSON, importCRS: string, exportCRS: string):
  * @param nsMap prefix-to-uri map of namespaces used in the original snippet
  * @returns 
  */
-export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: ParseOptions = { stride: 2 }): GeoJSON {
+export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: ParseOptions = { stride: 2 }): Geometry {
     if (_ == null) {
         return null;
     }
@@ -506,7 +506,7 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
     const parseMultiGeometry = (_: Node, opts: ParseOptions, ctx: Context = {}) => {
         const geometries: Geometry[] = [];
         Object.values(select('.//gml:geometryMembers/*|.//gml:geometryMember/*', _)).forEach((c: Element) => {
-            geometries.push(parseGml(c, nsMap, opts) as Geometry);
+            geometries.push(parseGml(c, nsMap, opts));
         });
 
         if (geometries.length === 0) {
@@ -525,54 +525,53 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
         opts.crs = (<Element>_).getAttribute('srsName')?.replace(/^.*?(\d+)$/, '$1');
     }
 
-    try {
-        switch (_.nodeName) {
-            case 'gml:Point':
-                return {
-                    type: 'Point',
-                    coordinates: parsePoint(_, opts, childCtx)
-                };
-            case 'gml:LineString':
-                return ensureClockwise({
-                    type: 'LineString',
-                    coordinates: parseLinearRingOrLineString(_, opts, childCtx)
-                }) as Geometry;
-            case 'gml:MultiCurve':
-                return {
-                    type: 'MultiLineString',
-                    coordinates: [parseRing(_, opts, childCtx)]
-                };
-            case 'gml:Rectangle':
-                // same as polygon
-            // eslint-disable-next-line no-fallthrough
-            case 'gml:Polygon':
-                return ensureClockwise({
-                    type: 'Polygon',
-                    coordinates: parsePolygonOrRectangle(_, opts, childCtx)
-                }) as Geometry;
-            case 'gml:Surface':
-                return ensureClockwise({
-                    type: 'MultiPolygon',
-                    coordinates: parseSurface(_, opts, childCtx)
-                }) as Geometry;
-            case 'gml:MultiSurface':
-                return ensureClockwise({
-                    type: 'MultiPolygon',
-                    coordinates: parseMultiSurface(_, opts, childCtx)
-                }) as Geometry;
-            case 'gml:MultiGeometry':
-                return {
-                    "type": "GeometryCollection",
-                    "geometries": parseMultiGeometry(_, opts, childCtx)
-                };
-            default:
-                return null;
-        }
+    switch (_.nodeName) {
+        case 'gml:Point':
+            return {
+                type: 'Point',
+                coordinates: parsePoint(_, opts, childCtx)
+            };
+        case 'gml:LineString':
+            return ensureClockwise({
+                type: 'LineString',
+                coordinates: parseLinearRingOrLineString(_, opts, childCtx)
+            });
+        case 'gml:MultiCurve':
+            return {
+                type: 'MultiLineString',
+                coordinates: [parseRing(_, opts, childCtx)]
+            };
+        // same as polygon
+        case 'gml:Rectangle':
+        // eslint-disable-next-line no-fallthrough
+        case 'gml:Polygon':
+            return ensureClockwise({
+                type: 'Polygon',
+                coordinates: parsePolygonOrRectangle(_, opts, childCtx)
+            });
+        case 'gml:Surface':
+            return ensureClockwise({
+                type: 'MultiPolygon',
+                coordinates: parseSurface(_, opts, childCtx)
+            });
+        case 'gml:MultiSurface':
+            return ensureClockwise({
+                type: 'MultiPolygon',
+                coordinates: parseMultiSurface(_, opts, childCtx)
+            });
+        case 'gml:MultiGeometry':
+            return {
+                "type": "GeometryCollection",
+                "geometries": parseMultiGeometry(_, opts, childCtx)
+            };
+        default:
+            return null;
     }
-    catch (e) {
-        // TODO log error
-        return null;
-    }
+}
+
+interface Envelope {
+    type: 'Envelope',
+    coordinates: Position[]
 }
 
 interface Context {
