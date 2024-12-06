@@ -26,7 +26,7 @@ import centroid from '@turf/centroid';
 import { AllGeoJSON } from '@turf/helpers';
 import rewind from '@turf/rewind';
 import deepEqual from 'deep-equal';
-import { GeoJSON, Geometry, GeometryCollection, Point, Polygon } from 'geojson';
+import { GeoJSON, Geometry, GeometryCollection, LineString, MultiPolygon, Point, Polygon, Position } from 'geojson';
 import proj4 from 'proj4';
 import * as xpath from 'xpath';
 import { HttpBadRequestError } from '../../../../../utils/utils.js';
@@ -44,8 +44,31 @@ function transformer(crs: string = 'WGS84'): (x: number, y: number) => number[] 
     return (x: number, y: number) => proj4(crs, 'WGS84').forward([x, y]);
 }
 
-function ensureClockwise(geometry: AllGeoJSON) {
-    return booleanClockwise(geometry as any) ? geometry : rewind(geometry);
+function isClockwise(geojson: LineString | Polygon | MultiPolygon): boolean {
+    if (geojson.type == 'Polygon') {
+        let first = booleanClockwise(geojson.coordinates[0]);
+        if (geojson.coordinates.some(coords => booleanClockwise(coords) != first)) {
+            throw new Error('Partly non-clockwise polygons are not supported');
+        }
+        return first;
+    }
+    else if (geojson.type == 'MultiPolygon') {
+        for (const polygons of geojson.coordinates) {
+            let first = booleanClockwise(polygons[0]);
+            if (polygons.some(coords => booleanClockwise(coords) != first)) {
+                throw new Error('Partly non-clockwise multi-polygons are not supported');
+            }
+            return first;
+        }
+        
+    }
+    else {
+        return booleanClockwise(geojson);
+    }
+}
+
+function ensureClockwise(geojson: LineString | Polygon | MultiPolygon): GeoJSON {
+    return isClockwise(geojson) ? geojson : rewind(geojson);
 }
 
 export function getBbox(spatial: AllGeoJSON): Point | Polygon | undefined {
