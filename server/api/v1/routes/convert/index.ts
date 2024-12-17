@@ -20,15 +20,15 @@
  */
 
 import { errorCodes, FastifyInstance } from 'fastify';
-import { GeoJSON } from 'geojson';
+import ogr2ogr from 'ogr2ogr';
+import { Readable } from 'stream';
 import { HttpBadRequestError } from '../../../../utils/utils.js';
-import { ConversionSettings, convert, DEFAULT_CRS } from './GeoConverter.js';
-import { ParserFactory } from './parsing/ParserFactory.js';
-import { FORMATS, GeoFormat, MODES } from './types.js';
+import { ProcessingFactory } from './processing/ProcessingFactory.js';
+import { ConversionSettings, DEFAULT_CRS, FORMATS, GeoFormat, MODES } from './types.js';
 
 export default async (server: FastifyInstance) => {
 
-    // define content-type parsers
+    // define content-type parsers for the input formats
     Object.entries(FORMATS).forEach(([geoFormat, contentTypes]) => {
         server.addContentTypeParser(contentTypes, { parseAs: 'string' }, (request, body: string, done) => {
             parse(geoFormat as GeoFormat, body, done);
@@ -39,15 +39,14 @@ export default async (server: FastifyInstance) => {
         parse(geoFormat, body, done);
     });
 
-    server.post<{ Body: GeoJSON, Querystring: ConversionSettings }>('/', {
+    server.post<{ Body: string, Querystring: ConversionSettings }>('/', {
         schema: {
             description: 'Converts a given geometry object from and to one of the listed formats. Requires a correct `content-type` header for the payload type - otherwise a simple heuristic is used to deduce it.',
             querystring: {
                 type: 'object',
                 properties: {
                     importCRS: {
-                        type: 'string',
-                        default: DEFAULT_CRS
+                        type: 'string'
                     },
                     exportFormat: {
                         enum: Object.keys(FORMATS)
@@ -64,13 +63,33 @@ export default async (server: FastifyInstance) => {
                 required: ['exportFormat']
             }
         }
-    }, async ({ body, query }, reply) => {
+    }, async ({ body, headers, query }, reply) => {
         // set content-type
         reply = reply.header('Content-Type', FORMATS[query.exportFormat][0]);
         // create response
-        let replyBody = convert(body, query);
+        let replyBody = await convert(body, determineFormatFromContentType(headers['content-type']), query);
         return reply.send(replyBody);
     });
+}
+
+async function convert(input: string, importFormat: GeoFormat, query: ConversionSettings): Promise<string> {
+    let importOptions = ProcessingFactory.get(importFormat).gdalOptions(input);
+    let exportProcessor = ProcessingFactory.get(query.exportFormat);
+    let exportOptions = exportProcessor.gdalOptions(input);
+
+    let stream = Readable.from(input);
+    let options = [];
+    options.push(...importOptions.openOptions);
+    options.push(...exportOptions.outputOptions);
+    // add CRS options
+    options.push('-s_srs', query.importCRS ?? DEFAULT_CRS);
+    options.push('-t_srs', query.exportCRS);
+    let output = await ogr2ogr(stream, {
+        driver: importOptions.driver,
+        options,
+        format: exportOptions.format
+    });
+    return exportProcessor.postprocess(output.text);
 }
 
 // naive heuristic for input format
@@ -84,6 +103,15 @@ function determineFormat(body: string): GeoFormat {
         default:
             return 'wkt';
     }
+}
+
+function determineFormatFromContentType(contentType: string): GeoFormat {
+    for (let [geoFormat, ct] of Object.entries(FORMATS)) {
+        if (ct.includes(contentType)) {
+            return geoFormat as GeoFormat;
+        }
+    }
+    return null;
 }
 
 function parse(geoFormat: GeoFormat, body: string, done) {

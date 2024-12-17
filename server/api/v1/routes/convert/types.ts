@@ -30,3 +30,40 @@ export const MODES = ['bbox', 'centroid', 'full'] as const;
 export type GeoFormat = keyof typeof FORMATS;
 
 export type ConversionMode = typeof MODES[number];
+
+export const DEFAULT_CRS = 'WGS84';
+
+export type ConversionSettings = {
+    importCRS: string,
+    exportFormat: GeoFormat,
+    exportCRS: string,
+    mode: ConversionMode
+}
+
+/**
+ * https://www.datypic.com/sc/niem21/e-gml32_geometryMember.html
+ */
+export const GEOMETRY_TYPES = [
+    'MultiGeometry', 
+    'MultiPoint', 
+    'MultiCurve', 
+    'MultiSurface', 
+    'MultiSolid', 
+    'Point', 
+    'LineString', 
+    'CompositeCurve', 
+    'Curve', 
+    'OrientableCurve', 
+    'Polygon', 
+    'CompositeSurface', 
+    'Surface', 
+    'PolyhedralSurface', 
+    'TriangulatedSurface', 
+    'Tin', 
+    'OrientableSurface', 
+    'CompositeSolid', 
+    'Solid', 
+    'GeometricComplex', 
+    'Grid', 
+    'RectifiedGrid', 
+];

@@ -40,4 +40,10 @@ export async function template(title: string, bodyPath: string): Promise<string>
     return template;
 }
 
+export function gmlTemplate(geometryElement: string): string {
+    let template = fs.readFileSync('./utils/gmlTemplate.xml', 'utf8');
+    template = template.replace('{{ geometryElement }}', geometryElement);
+    return template;
+}
+
 export const HttpBadRequestError = createError('HTTP_BAD_REQUEST', '%s', 400);

@@ -8,8 +8,9 @@
   ],
   "scripts": {
     "build": "tsc -p ./tsconfig.build.json",
-    "postbuild": "copyfiles api/**/*.json **/*.html dist",
+    "postbuild": "copyfiles api/**/*.json **/*.html **/*.xml dist",
     "install-production": "NODE_ENV=production npm ci",
+    "postinstall": "patch-package",
     "dev": "tsx watch ./server.ts",
     "test": "FASTIFY_AUTOLOAD_TYPESCRIPT=1 node --import tsx --test-reporter ./test/reporter.js --test ./test/**/*.ts"
   },
@@ -18,7 +19,9 @@
     "wkt",
     "gml",
     "api",
-    "conversion"
+    "conversion",
+    "gdal",
+    "ogr2ogr"
   ],
   "author": "Erik-Lân Do Dinh",
   "license": "EUPL",
@@ -41,8 +44,11 @@
     "geojson-to-gml-3": "^2.0.2",
     "marked": "^15.0.1",
     "marked-gfm-heading-id": "^4.1.0",
+    "ogr2ogr": "^5.1.0",
+    "patch-package": "^8.0.0",
     "proj4": "^2.12.1",
     "read-config-ng": "^3.0.7",
+    "xml-formatter": "^3.6.3",
     "xpath": "^0.0.34"
   },
   "devDependencies": {
@@ -56,6 +62,7 @@
     "copyfiles": "^2.4.1",
     "eslint": "^9.15.0",
     "eslint-plugin-license-header": "^0.6.1",
+    "lodash": "^4.17.21",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.15.0"
