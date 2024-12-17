@@ -29,6 +29,10 @@ ENV BUILD_DATE=$buildTimestamp
 # copy init
 COPY --from=building5/dumb-init:1.2.1 /dumb-init /usr/local/bin/
 
+# copy gdal
+COPY --from=ghcr.io/osgeo/gdal:alpine-small-latest /usr/bin/ogr2ogr /usr/local/bin/
+COPY --from=ghcr.io/osgeo/gdal:alpine-small-latest /usr/lib/ /usr/lib/
+
 # install production dependencies
 WORKDIR /opt/geo-conversion-api/server
 COPY --chmod=755 ./server/package*.json ./
