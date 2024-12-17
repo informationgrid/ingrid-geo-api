@@ -45,7 +45,7 @@ Required:
 Optional:
 * `importCRS` - Name of the reference system of the input geometry. Defaults to `WGS84`
 * `exportCRS` - Name of the reference system of the output geometry. Defaults to `WGS84`
-* `mode` - One of [`full`, `centroid`, `bbox`]. Defaults to `full`
+* `mode` - Currently unsupported ~~One of [`full`, `centroid`, `bbox`]. Defaults to `full`~~
 
 #### Body
 
@@ -77,15 +77,15 @@ Example `GML`:
 <gml:MultiGeometry>
     <gml:geometryMembers>
         <gml:Point>
-            <gml:pos>40 10</gml:pos>
+            <gml:pos>10 40</gml:pos>
         </gml:Point>
         <gml:LineString>
-            <gml:posList>10 40 20 20 10 10</gml:posList>
+            <gml:posList>40 10 20 20 10 10</gml:posList>
         </gml:LineString>
         <gml:Polygon>
             <gml:exterior>
                 <gml:LinearRing>
-                    <gml:posList>40 40 20 45 45 30 40 40</gml:posList>
+                    <gml:posList>40 40 45 20 30 45 40 40</gml:posList>
                 </gml:LinearRing>
             </gml:exterior>
         </gml:Polygon>
