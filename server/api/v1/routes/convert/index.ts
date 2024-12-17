@@ -116,7 +116,7 @@ function determineFormatFromContentType(contentType: string): GeoFormat {
 
 function parse(geoFormat: GeoFormat, body: string, done) {
     if (!body?.length) {
-        throw HttpBadRequestError('Body cannot be empty');
+        done(new HttpBadRequestError('Body cannot be empty'));
     }
     try {
         let parsedBody = ParserFactory.get(geoFormat).parse(body);
