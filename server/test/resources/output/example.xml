@@ -1,0 +1,27 @@
+<gml:MultiGeometry srsName="urn:ogc:def:crs:EPSG::4326" xmlns:gml="http://www.opengis.net/gml/3.2">
+    <gml:geometryMember>
+        <gml:Point>
+            <gml:pos>
+                10 40
+            </gml:pos>
+        </gml:Point>
+    </gml:geometryMember>
+    <gml:geometryMember>
+        <gml:LineString>
+            <gml:posList>
+                40 10 20 20 10 10
+            </gml:posList>
+        </gml:LineString>
+    </gml:geometryMember>
+    <gml:geometryMember>
+        <gml:Polygon>
+            <gml:exterior>
+                <gml:LinearRing>
+                    <gml:posList>
+                        40 40 45 20 30 45 40 40
+                    </gml:posList>
+                </gml:LinearRing>
+            </gml:exterior>
+        </gml:Polygon>
+    </gml:geometryMember>
+</gml:MultiGeometry>

@@ -23,9 +23,24 @@ import assert from 'assert';
 import { FastifyInstance } from 'fastify';
 import { after, before, describe, test } from 'node:test';
 import server from '../../index.js';
-import { assertEqualIgnoreSpaces, readFile } from '../test.utils.js';
+import { assertEquals, readFile } from '../test.utils.js';
 
-describe('POST /convert', () => {
+const FORMATS = {
+    'geojson': {
+        contentType: 'application/json',
+        file: 'example.json'
+    },
+    'gml': {
+        contentType: 'application/gml+xml',
+        file: 'example.xml'
+    },
+    'wkt': {
+        contentType: 'text/plain',
+        file: 'example.wkt'
+    }
+}
+
+describe('POST /convert various', () => {
     let app: FastifyInstance;
 
     before(async () => {
@@ -48,17 +63,17 @@ describe('POST /convert', () => {
         const response = await app.inject({
             method: 'POST',
             url: '/v1/convert?exportFormat=gml',
+            headers: { 'content-type': 'application/json' },
             body: readFile('example.json')
         });
         assert.strictEqual(response.statusCode, 200);
-        let expected = readFile('example.xml');
-        assertEqualIgnoreSpaces(response.body, expected);
     });
 
     test('POST /convert?exportFormat=gml with malformed input returns status 400', async () => {
         const response = await app.inject({
             method: 'POST',
             url: '/v1/convert?exportFormat=gml',
+            headers: { 'content-type': 'application/json' },
             body: {
                 "type": "Pointer",
                 "coordinates": [40, 10]
@@ -76,4 +91,37 @@ describe('POST /convert', () => {
         });
         assert.strictEqual(response.statusCode, 400);
     });
+});
+
+describe('POST /convert successful', () => {
+
+    function testConversion(inputFormat: string, outputFormat: string) {
+        test(`POST /convert ${inputFormat} to ${outputFormat}`, async () => {
+            const response = await app.inject({
+                method: 'POST',
+                url: `/v1/convert?exportFormat=${outputFormat}`,
+                headers: { 'content-type': FORMATS[inputFormat].contentType },
+                body: readFile('input/' + FORMATS[inputFormat].file)
+            });
+            assert.strictEqual(response.statusCode, 200);
+            let expected = readFile('output/' + FORMATS[outputFormat].file);
+            assert.strictEqual(response.body, expected);
+        });
+    }
+
+    let app: FastifyInstance;
+
+    before(async () => {
+        app = await server();
+    });
+
+    after(async () => {
+        await app.close()
+    });
+
+    for (let inputFormat of Object.keys(FORMATS)) {
+        for (let outputFormat of Object.keys(FORMATS)) {
+            testConversion(inputFormat, outputFormat);
+        }
+    }
 });

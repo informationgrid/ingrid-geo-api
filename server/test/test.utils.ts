@@ -21,15 +21,22 @@
 
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
+import { isDeepStrictEqual } from 'node:util';
+
 
 export function readFile(file: string) {
     return readFileSync(import.meta.dirname + `/resources/${file}`).toString();
 }
 
-export function assertEqualIgnoreSpaces(actual: string, expected: string) {
-    return assert.strictEqual(removeSpaces(actual), removeSpaces(expected));
-}
-
-function removeSpaces(haystack: string) {
-    return haystack.replaceAll(/\s/g, '');
+export function assertEquals(format: string, actual: string, expected: string) {
+    switch (format) {
+        case 'geojson':
+            return isDeepStrictEqual(actual, expected);
+        case 'gml':
+            return assert.strictEqual(actual, expected);
+        case 'wkt':
+            return assert.strictEqual(actual, expected);
+        default:
+            throw new Error(`Comparing objects is not implemented for format ${format}`)
+    }
 }
