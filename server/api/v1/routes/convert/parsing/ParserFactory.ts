@@ -19,17 +19,18 @@
  * ==================================================
  */
 
-import { FastifyInstance } from 'fastify';
-import { template } from '../../../../utils/utils.js';
+import { GeoFormat } from '../types.js';
+import { GeoParser } from './GeoParser.js';
+import { GeoJsonParser } from './parser/GeoJsonParser.js';
+import { GmlParser } from './parser/GmlParser.js';
+import { WktParser } from './parser/WktParser.js';
 
-const README = template('Information', '../README.md');
-
-export default async (server: FastifyInstance) => {
-    server.get('/', {
-        schema: {
-            description: 'Returns general information on API use.',
+export class ParserFactory {
+    static get(format: GeoFormat): GeoParser {
+        switch (format) {
+            case 'geojson': return new GeoJsonParser();
+            case 'gml': return new GmlParser();
+            case 'wkt': return new WktParser();
         }
-    }, async (request, reply) => {
-        return reply.header('Content-Type', 'text/html').send(await README);
-    });
+    }
 }

@@ -20,16 +20,14 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { template } from '../../../../utils/utils.js';
-
-const README = template('Information', '../README.md');
+import config from '../../../../config.js';
 
 export default async (server: FastifyInstance) => {
     server.get('/', {
         schema: {
-            description: 'Returns general information on API use.',
+            description: 'Returns version information.',
         }
     }, async (request, reply) => {
-        return reply.header('Content-Type', 'text/html').send(await README);
+        return reply.header('Content-Type', 'application/json').send(config.server.build);
     });
 }

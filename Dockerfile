@@ -1,7 +1,7 @@
 #
 # IMAGE: build server
 #
-FROM node:20.18.0-alpine3.20 AS build-server
+FROM node:20.18.1-alpine3.20 AS server
 LABEL stage=build
 
 # install build dependencies
@@ -15,28 +15,29 @@ RUN npm run build
 
 
 #
-# IMAGE: init
-#
-FROM building5/dumb-init:1.2.1 AS init
-
-
-#
 # IMAGE: final
 #
-FROM node:20.18.0-alpine3.20 AS final
+FROM node:20.18.1-alpine3.20 AS final
+
+ARG version
+ARG commitId
+ARG buildTimestamp
+ENV BUILD_VERSION=$version
+ENV BUILD_COMMIT_ID=$commitId
+ENV BUILD_DATE=$buildTimestamp
 
 # copy init
-COPY --from=init /dumb-init /usr/local/bin/
+COPY --from=building5/dumb-init:1.2.1 /dumb-init /usr/local/bin/
 
 # install production dependencies
 WORKDIR /opt/geo-conversion-api/server
-COPY --chown=node:node ./server/package*.json ./
+COPY --chmod=755 ./server/package*.json ./
 RUN npm run install-production
 
 # copy built files from server and client
 WORKDIR /opt/geo-conversion-api
-COPY --chown=node:node --from=build-server /opt/geo-conversion-api/server/dist ./server
-COPY --chown=node:node config.json README.md ./
+COPY --chmod=755 --from=server /opt/geo-conversion-api/server/dist ./server
+COPY --chmod=755 config.json README.md ./
 
 EXPOSE 3000
 

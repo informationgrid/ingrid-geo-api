@@ -19,17 +19,24 @@
  * ==================================================
  */
 
-import { FastifyInstance } from 'fastify';
-import { template } from '../../../../utils/utils.js';
+import { GeoJSON } from 'geojson';
 
-const README = template('Information', '../README.md');
+export interface GeoParser {
 
-export default async (server: FastifyInstance) => {
-    server.get('/', {
-        schema: {
-            description: 'Returns general information on API use.',
-        }
-    }, async (request, reply) => {
-        return reply.header('Content-Type', 'text/html').send(await README);
-    });
+    /**
+     * Parse a GeoJSON object from a given geometry string.
+     * 
+     * @param geometry string representing a geometry in this parser's format
+     * @returns a GeoJSON representation of the input geometry string
+     */
+    parse(geometry: string): GeoJSON;
+
+    /**
+     * Returns a string representation of a given GeoJSON object in this parser's format.
+     * 
+     * @param geojson GeoJSON to convert to this parser's format
+     * @param crs reference system of the output geometry
+     * @returns a string representation of the input geometry in this parser's format
+     */
+    write(geojson: GeoJSON, crs?: string): string;
 }

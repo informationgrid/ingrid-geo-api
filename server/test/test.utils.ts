@@ -19,17 +19,17 @@
  * ==================================================
  */
 
-import { FastifyInstance } from 'fastify';
-import { template } from '../../../../utils/utils.js';
+import assert from 'node:assert';
+import { readFileSync } from 'node:fs';
 
-const README = template('Information', '../README.md');
+export function readFile(file: string) {
+    return readFileSync(import.meta.dirname + `/resources/${file}`).toString();
+}
 
-export default async (server: FastifyInstance) => {
-    server.get('/', {
-        schema: {
-            description: 'Returns general information on API use.',
-        }
-    }, async (request, reply) => {
-        return reply.header('Content-Type', 'text/html').send(await README);
-    });
+export function assertEqualIgnoreSpaces(actual: string, expected: string) {
+    return assert.strictEqual(removeSpaces(actual), removeSpaces(expected));
+}
+
+function removeSpaces(haystack: string) {
+    return haystack.replaceAll(/\s/g, '');
 }

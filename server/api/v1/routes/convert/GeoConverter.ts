@@ -19,17 +19,29 @@
  * ==================================================
  */
 
-import { FastifyInstance } from 'fastify';
-import { template } from '../../../../utils/utils.js';
+import { GeoJSON } from 'geojson';
+import { getBbox, getCentroid, project } from './parsing/geojson.utils.js';
+import { ParserFactory } from './parsing/ParserFactory.js';
+import { ConversionMode, GeoFormat } from './types.js';
 
-const README = template('Information', '../README.md');
+export const DEFAULT_CRS = 'WGS84';
 
-export default async (server: FastifyInstance) => {
-    server.get('/', {
-        schema: {
-            description: 'Returns general information on API use.',
-        }
-    }, async (request, reply) => {
-        return reply.header('Content-Type', 'text/html').send(await README);
-    });
+export interface ConversionSettings {
+    importCRS: string,
+    exportFormat: GeoFormat,
+    exportCRS: string,
+    mode: ConversionMode
+}
+
+export function convert(geojson: GeoJSON, { importCRS, exportFormat, exportCRS, mode }: ConversionSettings): string {
+    if (mode == 'bbox') {
+        geojson = getBbox(geojson);
+    }
+    else if (mode == 'centroid') {
+        geojson = getCentroid(geojson);
+    }
+    if (importCRS != DEFAULT_CRS || exportCRS != DEFAULT_CRS) {
+        geojson = project(geojson, importCRS, exportCRS);
+    }
+    return ParserFactory.get(exportFormat).write(geojson, exportCRS);
 }

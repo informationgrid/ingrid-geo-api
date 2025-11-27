@@ -1,18 +1,16 @@
 /**
  * ==================================================
- * geo-conversion-api
- * ==================================================
  * Copyright (C) 2024 wemove digital solutions GmbH
  * ==================================================
  * Licensed under the EUPL, Version 1.2 or - as soon they will be
  * approved by the European Commission - subsequent versions of the
  * EUPL (the "Licence");
- * 
+ *
  * You may not use this work except in compliance with the Licence.
  * You may obtain a copy of the Licence at:
- * 
+ *
  * https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the Licence is distributed on an "AS IS" basis,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,82 +19,236 @@
  * ==================================================
  */
 
-import * as xpath from 'xpath';
 import bbox from '@turf/bbox';
 import bboxPolygon from '@turf/bbox-polygon';
+import booleanClockwise from '@turf/boolean-clockwise';
 import centroid from '@turf/centroid';
-import deepEqual from 'deep-equal';
-import proj4 from 'proj4';
 import rewind from '@turf/rewind';
-import { AllGeoJSON } from '@turf/helpers';
-import { Geometry, GeometryCollection, Point, Polygon } from 'geojson';
+import deepEqual from 'deep-equal';
+import { GeoJSON, Geometry, GeometryCollection, LineString, MultiPolygon, Point, Polygon, Position } from 'geojson';
+import proj4 from 'proj4';
+import * as xpath from 'xpath';
+import { HttpBadRequestError } from '../../../../../utils/utils.js';
+import { DEFAULT_CRS } from '../GeoConverter.js';
+import proj4jsMappings from './proj4.json' with { type: 'json' };
 
-// prepare proj4js
-const proj4jsMappings = require('./proj4.json');
+// load proj4js named projections
 proj4.defs(Object.entries(proj4jsMappings));
 
 function transformer(crs: string = 'WGS84'): (x: number, y: number) => number[] {
+    // shortcut: don't transform if inputCRS = outputCRS!
+    if (crs == 'WGS84') {
+        return (x: number, y: number) => [x, y];
+    }
     return (x: number, y: number) => proj4(crs, 'WGS84').forward([x, y]);
 }
 
-// TODO
-export function convert(geojson: any, exportCRS: string) {
-    return geojson;
+function isClockwise(geojson: LineString | Polygon | MultiPolygon): boolean {
+    if (geojson.type == 'Polygon') {
+        let first = booleanClockwise(geojson.coordinates[0]);
+        if (geojson.coordinates.some(coords => booleanClockwise(coords) != first)) {
+            throw new Error('Partly non-clockwise polygons are not supported');
+        }
+        return first;
+    }
+    else if (geojson.type == 'MultiPolygon') {
+        for (const polygons of geojson.coordinates) {
+            let first = booleanClockwise(polygons[0]);
+            if (polygons.some(coords => booleanClockwise(coords) != first)) {
+                throw new Error('Partly non-clockwise multi-polygons are not supported');
+            }
+            return first;
+        }
+        
+    }
+    else {
+        return booleanClockwise(geojson);
+    }
 }
 
-export function getBbox(spatial: AllGeoJSON): Point | Polygon | undefined {
-    if (!spatial) {
-        return undefined;
-    }
-    if (spatial?.type == 'Point') {
-        return spatial;
-    }
-    return bboxPolygon(bbox(spatial))?.geometry;
+function ensureClockwise(geojson: LineString | Polygon | MultiPolygon): Geometry {
+    return isClockwise(geojson) ? geojson : rewind(geojson) as Geometry;
 }
 
-export function getCentroid(spatial: Geometry | GeometryCollection): Point | undefined {
-    if (!spatial) {
+export function getBbox(geojson: GeoJSON): Point | Polygon {
+    if (!geojson) {
         return undefined;
     }
-    let modifiedSpatial = { ...spatial };
+    if (geojson.type == 'Point') {
+        return geojson;
+    }
+    return bboxPolygon(bbox(geojson))?.geometry;
+}
+
+export function getCentroid(geojson: GeoJSON): Point {
+    if (!geojson) {
+        return undefined;
+    }
+    let modifiedSpatial = { ...geojson };
     // turf/centroid does not support envelope, so we turn it into a linestring which has the same centroid
     if (modifiedSpatial.type?.toLowerCase() == 'envelope') {
         modifiedSpatial.type = 'LineString';
     }
     if (modifiedSpatial.type == 'GeometryCollection') {
-        // @ts-expect-error we will check for Envelope, just to be sure
-        (<GeometryCollection>modifiedSpatial).geometries.filter((geometry: AllGeoJSON) => geometry.type == 'Envelope').forEach((geometry: AllGeoJSON) => geometry.type = 'LineString');
+        (<GeometryCollection>modifiedSpatial).geometries
+            .filter((geometry: GeoJSON | Envelope) => geometry.type.toLowerCase() == 'envelope')
+            .forEach((geometry: GeoJSON | Envelope) => geometry.type = 'LineString');
     }
     return centroid(modifiedSpatial)?.geometry;
 }
 
-export function getBoundingBox(lowerCorner: string, upperCorner: string, crs?: string) {
-    const transformCoords = transformer(crs);
-    let [west, south] = transformCoords(...lowerCorner.trim().split(' ').map(parseFloat) as [number, number]);
-    let [east, north] = transformCoords(...upperCorner.trim().split(' ').map(parseFloat) as [number, number]);
+/**
+ * Project a GeoJSON from a given reference system to another.
+ * 
+ * For origin and licensing information, see NOTES.md
+ * 
+ * @param geojson geometry to project from one CRS to another
+ * @param importCRS input reference system
+ * @param exportCRS output reference system
+ * @returns a reprojection of the original geometry
+ */
+export function project(geojson: GeoJSON, importCRS: string, exportCRS: string): GeoJSON {
 
-    if (west === east && north === south) {
-        return {
-            'type': 'point',
-            'coordinates': [west, north]
-        };
+    if (importCRS != DEFAULT_CRS && !(importCRS in proj4jsMappings)) {
+        throw new HttpBadRequestError(`importCRS "${importCRS}" is not supported`);
     }
-    else if (west === east || north === south) {
-        return {
-            'type': 'linestring',
-            'coordinates': [[west, north], [east, south]]
-        };
+    if (exportCRS != DEFAULT_CRS && !(exportCRS.replace('EPSG:', '') in proj4jsMappings)) {
+        throw new HttpBadRequestError(`exportCRS "${exportCRS}" is not supported`);
     }
-    else {
-        return {
-            'type': 'Polygon',
-            'coordinates': [[[west, north], [west, south], [east, south], [east, north], [west, north]]]
-        };
-    }
+
+    exportCRS = exportCRS.replace('EPSG:', '');
+
+    const reproject = (coords: number[]) => proj4(importCRS, exportCRS).forward(coords);
+
+    const reprojectLine = (coords, options) => {
+        let densify =
+            typeof options === "object" && typeof options.densify === "number"
+            ? options.densify
+            : 0;
+        const strategy =
+            typeof options === "object" && typeof options.strategy === "string"
+            ? options.strategy
+            : "auto";
+        
+        // just in case densify isn't a round number
+        densify = Math.round(densify);
+        
+        // algorithm
+        // drop point when the slope changes (and at the end)
+        const out = [];
+        
+        let [xprev, yprev] = reproject(coords[0]);
+        let mprev = null;
+        let m = null;
+        
+        for (let i = 1; i < coords.length; i++) {
+            const [x1, y1] = coords[i - 1];
+            const [x2, y2] = coords[i];
+        
+            const xdist = x2 - x1;
+            const ydist = y2 - y1;
+        
+            const xstep = xdist / (densify + 1);
+            const ystep = ydist / (densify + 1);
+        
+            for (let ii = 1; ii <= densify; ii++) {
+                const [rx, ry] = reproject([x1 + ii * xstep, y1 + ii * ystep]);
+                m = (ry - yprev) / (rx - xprev);
+            
+                if (strategy === "always" || m !== mprev) {
+                    out.push([xprev, yprev]);
+                    mprev = m;
+                }
+                xprev = rx;
+                yprev = ry;
+            }
+
+            // try with last coord in segment
+            const [rx2, ry2] = reproject([x2, y2]);
+            m = (ry2 - yprev) / (rx2 - xprev);
+
+            // if slope changes, drop point
+            if (strategy === "always" || m !== mprev) {
+                out.push([xprev, yprev]);
+                mprev = m;
+            }
+
+            xprev = rx2;
+            yprev = ry2;
+        }
+
+        // drop last point
+        out.push([xprev, yprev]);
+
+        return out;
+    };
+
+    const reprojectGeoJSONPluggable = (geojson: GeoJSON, { densify }) => {
+        if (geojson.type === "FeatureCollection") {
+            return {
+                ...geojson,
+                features: geojson.features.map(feature => reprojectGeoJSONPluggable(feature, { densify }))
+            };
+        } else if (geojson.type === "Feature") {
+            return {
+                ...geojson,
+                geometry: reprojectGeoJSONPluggable(geojson.geometry, { densify })
+            };
+        } else if (geojson.type === "GeometryCollection") {
+            return {
+                ...geojson,
+                geometries: geojson.geometries.map(geometry => reprojectGeoJSONPluggable(geometry, { densify }))
+            };
+        } else if (geojson.type === "LineString") {
+            return {
+                ...geojson,
+                coordinates: reprojectLine(geojson.coordinates, { densify })
+            };
+        } else if (geojson.type === "MultiLineString") {
+            return {
+                ...geojson,
+                coordinates: geojson.coordinates.map(line => reprojectLine(line, { densify }))
+            };
+        } else if (geojson.type === "MultiPoint") {
+            return {
+                ...geojson,
+                coordinates: geojson.coordinates.map(point => reproject(point))
+            };
+        } else if (geojson.type === "MultiPolygon") {
+            return {
+                ...geojson,
+                coordinates: geojson.coordinates.map(polygon => {
+                    return polygon.map(ring => reprojectLine(ring, { densify }));
+                })
+            };
+        } else if (geojson.type === "Point") {
+            return {
+                ...geojson,
+                coordinates: reproject(geojson.coordinates)
+            };
+        } else if (geojson.type === "Polygon") {
+            return {
+                ...geojson,
+                coordinates: geojson.coordinates.map(ring => reprojectLine(ring, { densify }))
+            };
+        }
+        return geojson;
+    };
+
+    return reprojectGeoJSONPluggable(geojson, { densify: null });
 }
 
-// @ts-expect-error despite what TS says, function does NOT lack return statement
-export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ name: string ]: string; }): Geometry | null {
+/**
+ * Parse a GML snippet into a GeoJSON object.
+ * 
+ * For origin and licensing information, see NOTES.md
+ * 
+ * @param _ the XML DOM node to parse
+ * @param opts 
+ * @param nsMap prefix-to-uri map of namespaces used in the original snippet
+ * @returns 
+ */
+export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: ParseOptions = { stride: 2 }): Geometry {
     if (_ == null) {
         return null;
     }
@@ -351,6 +503,18 @@ export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ na
         return polygons;
     };
 
+    const parseMultiGeometry = (_: Node, opts: ParseOptions, ctx: Context = {}) => {
+        const geometries: Geometry[] = [];
+        Object.values(select('.//gml:geometryMembers/*|.//gml:geometryMember/*', _)).forEach((c: Element) => {
+            geometries.push(parseGml(c, nsMap, opts));
+        });
+
+        if (geometries.length === 0) {
+            throw new Error(_.nodeName + ' must have > 0 geometries');
+        }
+        return geometries;
+    };
+
     const childCtx = createChildContext(_, opts, {});
 
     opts ??= {};
@@ -361,53 +525,53 @@ export function parse(_: Node, opts: ParseOptions = { stride: 2 }, nsMap: { [ na
         opts.crs = (<Element>_).getAttribute('srsName')?.replace(/^.*?(\d+)$/, '$1');
     }
 
-    try {
-        switch (_.nodeName) {
-            case 'gml:Point':
-                return {
-                    type: 'Point',
-                    coordinates: parsePoint(_, opts, childCtx)
-                };
-            case 'gml:LineString':
-                return rewind({
-                    type: 'LineString',
-                    coordinates: parseLinearRingOrLineString(_, opts, childCtx)
-                }) as Geometry;
-            case 'gml:MultiCurve':
-                return {
-                    type: 'MultiLineString',
-                    coordinates: [parseRing(_, opts, childCtx)]
-                };
-            case 'gml:Rectangle':
-                // same as polygon
-            // eslint-disable-next-line no-fallthrough
-            case 'gml:Polygon':
-                return rewind({
-                    type: 'Polygon',
-                    coordinates: parsePolygonOrRectangle(_, opts, childCtx)
-                }) as Geometry;
-            case 'gml:Surface':
-                return rewind({
-                    type: 'MultiPolygon',
-                    coordinates: parseSurface(_, opts, childCtx)
-                }) as Geometry;
-            case 'gml:MultiSurface':
-                return rewind({
-                    type: 'MultiPolygon',
-                    coordinates: parseMultiSurface(_, opts, childCtx)
-                }) as Geometry;
-            case 'gml:MultiGeometry':
-                // TODO similar to gml:MultiSurface ??
-                // example: https://metropolplaner.de/osterholz/wfs?typeNames=plu:LU.SupplementaryRegulation&request=GetFeature
-                break;
-            default:
-                return null;
-        }
+    switch (_.nodeName) {
+        case 'gml:Point':
+            return {
+                type: 'Point',
+                coordinates: parsePoint(_, opts, childCtx)
+            };
+        case 'gml:LineString':
+            return ensureClockwise({
+                type: 'LineString',
+                coordinates: parseLinearRingOrLineString(_, opts, childCtx)
+            });
+        case 'gml:MultiCurve':
+            return {
+                type: 'MultiLineString',
+                coordinates: [parseRing(_, opts, childCtx)]
+            };
+        // same as polygon
+        case 'gml:Rectangle':
+        // eslint-disable-next-line no-fallthrough
+        case 'gml:Polygon':
+            return ensureClockwise({
+                type: 'Polygon',
+                coordinates: parsePolygonOrRectangle(_, opts, childCtx)
+            });
+        case 'gml:Surface':
+            return ensureClockwise({
+                type: 'MultiPolygon',
+                coordinates: parseSurface(_, opts, childCtx)
+            });
+        case 'gml:MultiSurface':
+            return ensureClockwise({
+                type: 'MultiPolygon',
+                coordinates: parseMultiSurface(_, opts, childCtx)
+            });
+        case 'gml:MultiGeometry':
+            return {
+                "type": "GeometryCollection",
+                "geometries": parseMultiGeometry(_, opts, childCtx)
+            };
+        default:
+            return null;
     }
-    catch (e) {
-        // TODO log error
-        return null;
-    }
+}
+
+interface Envelope {
+    type: 'Envelope',
+    coordinates: Position[]
 }
 
 interface Context {

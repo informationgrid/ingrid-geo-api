@@ -19,17 +19,27 @@
  * ==================================================
  */
 
-import { FastifyInstance } from 'fastify';
-import { template } from '../../../../utils/utils.js';
+import { check } from '@placemarkio/check-geojson';
+import { GeoJSON } from 'geojson';
+import { GeoParser } from '../GeoParser.js';
 
-const README = template('Information', '../README.md');
+export class GeoJsonParser implements GeoParser {
 
-export default async (server: FastifyInstance) => {
-    server.get('/', {
-        schema: {
-            description: 'Returns general information on API use.',
+    parse(geometry: string): GeoJSON {
+        try {
+            // use @placemarkio/check-geojson instead of JSON.parse because it validates GeoJSON
+            return check(geometry);
         }
-    }, async (request, reply) => {
-        return reply.header('Content-Type', 'text/html').send(await README);
-    });
+        catch (e) {
+            let issue = e?.issues?.[0];
+            if (!issue) {
+                throw e;
+            }
+            throw new Error(`${issue.message} [${issue.from},${issue.to}]`);
+        }
+    }
+
+    write(geojson: GeoJSON): string {
+        return JSON.stringify(geojson);
+    }
 }

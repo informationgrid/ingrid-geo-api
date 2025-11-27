@@ -19,17 +19,27 @@
  * ==================================================
  */
 
+import assert from 'assert';
 import { FastifyInstance } from 'fastify';
-import { template } from '../../../../utils/utils.js';
+import { after, before, describe, test } from 'node:test';
+import server from '../../index.js';
 
-const README = template('Information', '../README.md');
+describe('GET /api-docs', () => {
+    let app: FastifyInstance;
 
-export default async (server: FastifyInstance) => {
-    server.get('/', {
-        schema: {
-            description: 'Returns general information on API use.',
-        }
-    }, async (request, reply) => {
-        return reply.header('Content-Type', 'text/html').send(await README);
+    before(async () => {
+        app = await server();
     });
-}
+
+    after(async () => {
+        await app.close()
+    });
+
+    test('GET /api-docs returns status 200', async () => {
+        const response = await app.inject({
+            method: 'GET',
+            url: '/v1/api-docs/'
+        });
+        assert.strictEqual(response.statusCode, 200);
+    });
+});

@@ -5,29 +5,51 @@ Additionally, it can create centroid and bbox information.
 
 The default port is 3000 and can be changed using the `GEO_API_PORT` environment variable.
 
+The current base route is `/v1`.
+
 
 ## Endpoints
+
+### GET `/api-docs`
+
+Shows API specification and debugging tool.
 
 ### GET `/info`
 
 Returns general information on API use.
 
+### GET `/version`
+
+Returns version information.
+
 ### POST `/convert`
 
-Converts a given geometry object from and to one of the [supported formats](#formats). The input format is recognized automatically, the export format has to be specified via the `exportFormat` query parameter.
+Converts a given geometry object from and to one of the [supported formats](#formats).
+The request requires a correct `content-type` header for the payload type - otherwise a simple heuristic is used to deduce it.
+The export format has to be specified via the `exportFormat` query parameter.
 
 Also supports calculation of the centroid or the bounding box of a given geometry, via the `mode` parameter.
 
+#### Content-Type
+
+Accepted `content-type`s are:
+* [`application/xml`, `application/gml+xml`] for GML snippets
+* [`application/json`, `application/geo+json`] for GeoJSON objects or arrays
+* [`text/plain`] for WKT
+
 #### Query Parameters
 
-* `importCRS` - TODO
-* `exportCRS` - TODO
+Required:
 * `exportFormat` - One of [`geojson`, `gml`, `wkt`]
+
+Optional:
+* `importCRS` - Name of the reference system of the input geometry. Defaults to `WGS84`
+* `exportCRS` - Name of the reference system of the output geometry. Defaults to `WGS84`
 * `mode` - One of [`full`, `centroid`, `bbox`]. Defaults to `full`
 
 #### Body
 
-The to-be-converted geometry object in one of the [supported formats](#formats). Examples for input:
+The to-be-converted geometry object in one of the [supported formats](#formats).
 
 Example `GeoJSON`:
 ```
@@ -40,7 +62,7 @@ Example `GeoJSON`:
         },
         {
             "type": "LineString",
-            "coordinates": [[10, 10], [20, 20], [10, 40]]
+            "coordinates": [[10, 40], [20, 20], [10, 10]]
         },
         {
             "type": "Polygon",
@@ -58,7 +80,7 @@ Example `GML`:
             <gml:pos>40 10</gml:pos>
         </gml:Point>
         <gml:LineString>
-            <gml:posList>10 10 20 20 10 40</gml:posList>
+            <gml:posList>10 40 20 20 10 10</gml:posList>
         </gml:LineString>
         <gml:Polygon>
             <gml:exterior>
@@ -74,7 +96,7 @@ Example `GML`:
 Example `WKT`:
 ```
 GEOMETRYCOLLECTION (POINT (40 10),
-LINESTRING (10 10, 20 20, 10 40),
+LINESTRING (10 40, 20 20, 10 10),
 POLYGON ((40 40, 20 45, 45 30, 40 40)))
 ```
 
