@@ -1,0 +1,15 @@
+[Unit]
+Description=InGrid Harvester
+After=network.target
+
+[Service]
+Environment=NODE_ENV=production
+User=ingrid
+WorkingDirectory=/opt/ingrid/ingrid-geo-api
+ExecStart=/usr/bin/pm2 start server.js
+ExecStop=/usr/bin/pm2 delete server.js
+ExecReload=/usr/bin/pm2 restart server.js
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
