@@ -25,6 +25,7 @@ ARG buildTimestamp
 ENV BUILD_VERSION=$version
 ENV BUILD_COMMIT_ID=$commitId
 ENV BUILD_DATE=$buildTimestamp
+ENV NODE_ENV=production
 
 # copy init
 COPY --from=building5/dumb-init:1.2.1 /dumb-init /usr/local/bin/
