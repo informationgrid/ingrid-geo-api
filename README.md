@@ -3,6 +3,8 @@
 This API converts geometry information from and to various formats.
 Additionally, it can create centroid and bbox information.
 
+If no SRS is given, lon/lat order for coordinates is assumed (input) and written (output).
+
 The default port is 3000 and can be changed using the `GEO_API_PORT` environment variable.
 
 The current base route is `/v1`.
@@ -107,3 +109,11 @@ Supported formats for input and output (parameter in parentheses) are
 * GeoJSON (`geojson`)
 * GML (`gml`)
 * WKT (`wkt`)
+
+
+## Tests
+
+The accompanying tests can be run using:
+```
+npm run test
+```
