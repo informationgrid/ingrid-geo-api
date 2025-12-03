@@ -61,7 +61,7 @@ function isClockwise(geojson: LineString | Polygon | MultiPolygon): boolean {
         let exteriorsAreClockwise = isExteriorClockwise(geojson.coordinates?.[0]);
         if (geojson.coordinates.slice(1).some(polygon => isExteriorClockwise(polygon) != exteriorsAreClockwise)) {
             throw new Error('Polygons in a MultiPolygon must all adhere to the same direction (counter-clockwise)');
-            }
+        }
         return exteriorsAreClockwise;
     }
     else {
@@ -93,7 +93,7 @@ export function getCentroid(geojson: GeoJSON): Point {
         modifiedSpatial.type = 'LineString';
     }
     if (modifiedSpatial.type == 'GeometryCollection') {
-        (<GeometryCollection>modifiedSpatial).geometries
+        (modifiedSpatial as GeometryCollection).geometries
             .filter((geometry: GeoJSON | Envelope) => geometry.type.toLowerCase() == 'envelope')
             .forEach((geometry: GeoJSON | Envelope) => geometry.type = 'LineString');
     }
@@ -256,7 +256,7 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
         return null;
     }
 
-    const select = <XPathElementSelect>xpath.useNamespaces(nsMap);
+    const select = xpath.useNamespaces(nsMap) as XPathElementSelect;
 
     const parseCoords = (s: string, opts: ParseOptions = { stride: 2 }, ctx: Context = { srsDimension: undefined }) => {
         const stride = ctx.srsDimension || opts.stride || 2;
@@ -282,7 +282,7 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
     };
 
     const createChildContext = (_: Node, opts: ParseOptions, ctx: Context) => {
-        const srsDimensionAttribute = (<Element>_).getAttribute('srsDimension');
+        const srsDimensionAttribute = (_ as Element).getAttribute('srsDimension');
 
         if (srsDimensionAttribute) {
             const srsDimension = parseInt(srsDimensionAttribute);
@@ -525,7 +525,7 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
         // observed Patterns for CRS are
         // - urn:ogc:def:crs:EPSG::4326
         // - http://www.opengis.net/def/crs/EPSG/0/4326
-        opts.crs = (<Element>_).getAttribute('srsName')?.replace(/^.*?(\d+)$/, '$1');
+        opts.crs = (_ as Element).getAttribute('srsName')?.replace(/^.*?(\d+)$/, '$1');
     }
 
     switch (_.nodeName) {
