@@ -1,0 +1,12 @@
+<gml:Polygon>
+    <gml:exterior>
+        <gml:LinearRing>
+            <gml:posList>35 10 45 45 15 40 10 20 35 10</gml:posList>
+        </gml:LinearRing>
+    </gml:exterior>
+    <gml:interior>
+        <gml:LinearRing>
+            <gml:posList>20 30 35 35 30 20 20 30</gml:posList>
+        </gml:LinearRing>
+    </gml:interior>
+</gml:Polygon>
