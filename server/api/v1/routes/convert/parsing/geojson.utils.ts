@@ -44,30 +44,33 @@ function transformer(crs: string = 'WGS84'): (x: number, y: number) => number[] 
 }
 
 function isClockwise(geojson: LineString | Polygon | MultiPolygon): boolean {
-    if (geojson.type == 'Polygon') {
-        let first = booleanClockwise(geojson.coordinates[0]);
-        if (geojson.coordinates.some(coords => booleanClockwise(coords) != first)) {
-            throw new Error('Partly non-clockwise polygons are not supported');
+    const isExteriorClockwise = (polygon) => {
+        let exteriorDirection = booleanClockwise(polygon[0]);
+        // interior rings must be clockwise, i.e. run opposite the exterior (first) linear ring
+        // TODO introduce parameter to automatically fix wrong directions
+        if (polygon.slice(1).some(coords => booleanClockwise(coords) == exteriorDirection)) {
+            throw new Error('Interior linear rings must run in the opposite direction of the exterior ring');
         }
-        return first;
+        return exteriorDirection;
+    };
+
+    if (geojson.type == 'Polygon') {
+        return isExteriorClockwise(geojson.coordinates);
     }
     else if (geojson.type == 'MultiPolygon') {
-        for (const polygons of geojson.coordinates) {
-            let first = booleanClockwise(polygons[0]);
-            if (polygons.some(coords => booleanClockwise(coords) != first)) {
-                throw new Error('Partly non-clockwise multi-polygons are not supported');
+        let exteriorsAreClockwise = isExteriorClockwise(geojson.coordinates?.[0]);
+        if (geojson.coordinates.slice(1).some(polygon => isExteriorClockwise(polygon) != exteriorsAreClockwise)) {
+            throw new Error('Polygons in a MultiPolygon must all adhere to the same direction (counter-clockwise)');
             }
-            return first;
-        }
-        
+        return exteriorsAreClockwise;
     }
     else {
         return booleanClockwise(geojson);
     }
 }
 
-function ensureClockwise(geojson: LineString | Polygon | MultiPolygon): Geometry {
-    return isClockwise(geojson) ? geojson : rewind(geojson) as Geometry;
+function ensureCounterClockwise(geojson: LineString | Polygon | MultiPolygon): Geometry {
+    return isClockwise(geojson) ? rewind(geojson) as Geometry : geojson;
 }
 
 export function getBbox(geojson: GeoJSON): Point | Polygon {
@@ -532,7 +535,7 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
                 coordinates: parsePoint(_, opts, childCtx)
             };
         case 'gml:LineString':
-            return ensureClockwise({
+            return ensureCounterClockwise({
                 type: 'LineString',
                 coordinates: parseLinearRingOrLineString(_, opts, childCtx)
             });
@@ -545,17 +548,17 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
         case 'gml:Rectangle':
         // eslint-disable-next-line no-fallthrough
         case 'gml:Polygon':
-            return ensureClockwise({
+            return ensureCounterClockwise({
                 type: 'Polygon',
                 coordinates: parsePolygonOrRectangle(_, opts, childCtx)
             });
         case 'gml:Surface':
-            return ensureClockwise({
+            return ensureCounterClockwise({
                 type: 'MultiPolygon',
                 coordinates: parseSurface(_, opts, childCtx)
             });
         case 'gml:MultiSurface':
-            return ensureClockwise({
+            return ensureCounterClockwise({
                 type: 'MultiPolygon',
                 coordinates: parseMultiSurface(_, opts, childCtx)
             });
