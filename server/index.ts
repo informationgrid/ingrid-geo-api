@@ -54,9 +54,13 @@ export default async function app() {
     await server.register(swagger, swaggerConfig);
 
     server.setErrorHandler((error, request, reply) => {
-        let message: string = error.message;
+        let message: string = "Internal Server Error";
         let statusCode = 500;
-        if (error instanceof Error) {
+        if (typeof error === 'string') {
+            message = error;
+        }
+        else if (error instanceof Error) {
+            message = error.message;
             if ('cause' in error && typeof(error.cause) === 'number') {
                 statusCode = error.cause;
             }
