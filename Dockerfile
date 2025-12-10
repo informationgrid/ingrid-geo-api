@@ -33,8 +33,8 @@ ENV BUILD_VERSION=$version
 ENV BUILD_COMMIT_ID=$commitId
 ENV BUILD_DATE=$buildTimestamp
 
-# copy init
-COPY --from=building5/dumb-init:1.2.1 /dumb-init /usr/local/bin/
+# install tini
+RUN apk add --no-cache tini
 
 # copy gdal
 COPY --from=ghcr.io/osgeo/gdal:${GDAL_TAG} /usr/bin/ogr2ogr /usr/local/bin/
@@ -55,5 +55,5 @@ EXPOSE 3000
 USER node
 
 WORKDIR ${BUILD_DIR}/server
-ENTRYPOINT ["dumb-init", "--"]
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "server.js"]
