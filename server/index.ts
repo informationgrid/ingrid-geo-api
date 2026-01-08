@@ -25,6 +25,7 @@ import ScalarApiReference from '@scalar/fastify-api-reference';
 import Fastify from 'fastify';
 import path from 'path';
 import config from './config.js';
+import logger from './utils/logger.js';
 
 const BASE_URL = '/' + (config.server.baseUrl?.trim().replace(/^\/*|\/*$/g, '').trim() ?? '');
 const API_DOCS_URL = 'api-docs';
@@ -32,7 +33,7 @@ const API_DOCS_URL = 'api-docs';
 export default async function app() {
 
     const server = Fastify({
-        logger: true,
+        loggerInstance: logger,
         ignoreTrailingSlash: true
     });
 
