@@ -31,6 +31,8 @@ import * as xpath from 'xpath';
 import { HttpBadRequestError } from '../../../../../utils/utils.js';
 import { DEFAULT_CRS } from '../GeoConverter.js';
 import proj4jsMappings from './proj4.json' with { type: 'json' };
+import { OrientationStrategy } from '../types.js';
+import logger from '../../../../../utils/logger.js';
 
 // load proj4js named projections
 proj4.defs(Object.entries(proj4jsMappings));
@@ -44,6 +46,7 @@ function transformer(crs: string = 'WGS84'): (x: number, y: number) => number[] 
 }
 
 function isClockwise(geojson: LineString | Polygon | MultiPolygon): boolean {
+    logger.info('Checking if GeoJSON ring is clockwise: ' + JSON.stringify(geojson));
     const isExteriorClockwise = (polygon) => {
         let exteriorDirection = booleanClockwise(polygon[0]);
         // interior rings must be clockwise, i.e. run opposite the exterior (first) linear ring
@@ -69,8 +72,42 @@ function isClockwise(geojson: LineString | Polygon | MultiPolygon): boolean {
     }
 }
 
-function ensureCounterClockwise(geojson: LineString | Polygon | MultiPolygon): Geometry {
-    return isClockwise(geojson) ? rewind(geojson) as Geometry : geojson;
+function ensureCounterClockwise(geojson: LineString | Polygon | MultiPolygon, orientationStrategy: OrientationStrategy): Geometry {
+    try {
+        if (isClockwise(geojson)) {
+            switch (orientationStrategy) {
+                case 'fix':
+                    logger.info('Fixing GeoJSON ring orientation to be counter-clockwise');
+                    return rewind(geojson) as Geometry;
+                case 'warn':
+                    logger.warn('GeoJSON ring orientation is clockwise - ignoring incorrect orientation');
+                    return geojson;
+                case 'error':
+                    throw new Error('GeoJSON ring orientation is clockwise');
+            }
+        }
+        else {
+            return geojson;
+        }
+    }
+    catch (e) {
+        switch (orientationStrategy) {
+            case 'fix':
+                // TODO fix inconsistent ring orientations
+                logger.error(e);
+                logger.warn('GeoJSON ring orientation is inconsistent, but fix is not yet implemented - ignoring incorrect orientation');
+                return geojson;
+            case 'warn':
+                logger.error(e);
+                logger.warn('GeoJSON ring orientation is inconsistent, ignoring incorrect orientation');
+                return geojson;
+            case 'error':
+                throw e;
+            default:
+                logger.warn(`Unknown orientationStrategy "${orientationStrategy}", ignoring incorrect orientation`);
+                return geojson;
+        }
+    }
 }
 
 export function getBbox(geojson: GeoJSON): Point | Polygon {
@@ -528,6 +565,8 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
         opts.crs = (_ as Element).getAttribute('srsName')?.replace(/^.*?(\d+)$/, '$1');
     }
 
+    let orientationStrategy: OrientationStrategy = 'fix';
+
     switch (_.nodeName) {
         case 'gml:Point':
             return {
@@ -538,7 +577,7 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
             return ensureCounterClockwise({
                 type: 'LineString',
                 coordinates: parseLinearRingOrLineString(_, opts, childCtx)
-            });
+            }, orientationStrategy);
         case 'gml:MultiCurve':
             return {
                 type: 'MultiLineString',
@@ -551,17 +590,17 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
             return ensureCounterClockwise({
                 type: 'Polygon',
                 coordinates: parsePolygonOrRectangle(_, opts, childCtx)
-            });
+            }, orientationStrategy);
         case 'gml:Surface':
             return ensureCounterClockwise({
                 type: 'MultiPolygon',
                 coordinates: parseSurface(_, opts, childCtx)
-            });
+            }, orientationStrategy);
         case 'gml:MultiSurface':
             return ensureCounterClockwise({
                 type: 'MultiPolygon',
                 coordinates: parseMultiSurface(_, opts, childCtx)
-            });
+            }, orientationStrategy);
         case 'gml:MultiGeometry':
             return {
                 "type": "GeometryCollection",

@@ -27,6 +27,10 @@ export const FORMATS = {
 
 export const MODES = ['bbox', 'centroid', 'full'] as const;
 
+export const ORIENTATION_STRATEGIES = ['fix', 'warn', 'error'] as const;
+
 export type GeoFormat = keyof typeof FORMATS;
 
 export type ConversionMode = typeof MODES[number];
+
+export type OrientationStrategy = typeof ORIENTATION_STRATEGIES[number];
