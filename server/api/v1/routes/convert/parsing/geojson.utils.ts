@@ -562,6 +562,10 @@ export function parseGml(_: Node, nsMap: { [ name: string ]: string; }, opts: Pa
         // observed Patterns for CRS are
         // - urn:ogc:def:crs:EPSG::4326
         // - http://www.opengis.net/def/crs/EPSG/0/4326
+        
+        // TODO these should to be handled separately, because they affect axis order
+        // c.f. https://docs.geocat.net/geoserver-enterprise/2022/services/wfs/axis_order.html
+        
         opts.crs = (_ as Element).getAttribute('srsName')?.replace(/^.*?(\d+)$/, '$1');
     }
 
