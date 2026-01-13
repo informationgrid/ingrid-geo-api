@@ -10,6 +10,8 @@ ARG BUILD_DIR=/opt/ingrid/geo-api
 FROM node:${NODE_TAG} AS server
 LABEL stage=build
 
+ARG BUILD_DIR
+
 # install build dependencies
 WORKDIR ${BUILD_DIR}/server
 COPY ./server/package*.json ./
@@ -28,6 +30,7 @@ FROM node:${NODE_TAG} AS final
 ARG version
 ARG commitId
 ARG buildTimestamp
+ARG BUILD_DIR
 ENV BUILD_VERSION=$version
 ENV BUILD_COMMIT_ID=$commitId
 ENV BUILD_DATE=$buildTimestamp

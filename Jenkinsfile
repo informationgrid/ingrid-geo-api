@@ -49,7 +49,7 @@ pipeline {
 
                     // copy compiled app into workspace to be used by RPM task
                     dockerImage.inside {
-                        sh "cp -r /opt/ingrid/ingrid-geo-api/ ${WORKSPACE}/build"
+                        sh "cp -r /opt/ingrid/geo-api/ ${WORKSPACE}/build"
                     }
                 }
             }
