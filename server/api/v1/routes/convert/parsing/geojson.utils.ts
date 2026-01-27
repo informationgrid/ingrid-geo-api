@@ -77,7 +77,8 @@ function ensureCounterClockwise(geojson: LineString | Polygon | MultiPolygon, or
         if (isClockwise(geojson)) {
             switch (orientationStrategy) {
                 case 'fix':
-                    logger.info('Fixing GeoJSON ring orientation to be counter-clockwise');
+                    logger.warn('GeoJSON ring orientation is clockwise/counter-clockwise (exterior/interior)');
+                    logger.info('Fixing GeoJSON ring orientation to be counter-clockwise/clockwise (exterior/interior)');
                     return rewind(geojson) as Geometry;
                 case 'warn':
                     logger.warn('GeoJSON ring orientation is clockwise - ignoring incorrect orientation');
