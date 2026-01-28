@@ -18,19 +18,10 @@
  * limitations under the Licence.
  * ==================================================
  */
+import pino from 'pino';
 
-export const FORMATS = {
-    'geojson': ['application/json', 'application/geo+json'] as string[],
-    'gml': ['application/xml', 'application/gml+xml'] as string[],
-    'wkt': ['text/plain'] as string[]
-} as const;
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info'
+});
 
-export const MODES = ['bbox', 'centroid', 'full'] as const;
-
-export const ORIENTATION_STRATEGIES = ['fix', 'warn', 'error'] as const;
-
-export type GeoFormat = keyof typeof FORMATS;
-
-export type ConversionMode = typeof MODES[number];
-
-export type OrientationStrategy = typeof ORIENTATION_STRATEGIES[number];
+export default logger;

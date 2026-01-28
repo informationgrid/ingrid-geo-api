@@ -1,11 +1,19 @@
 #
+# VARIABLES
+#
+ARG NODE_TAG=20.19.6-alpine3.23
+ARG BUILD_DIR=/opt/ingrid/geo-api
+
+#
 # IMAGE: build server
 #
-FROM node:20.18.1-alpine3.20 AS server
+FROM node:${NODE_TAG} AS server
 LABEL stage=build
 
+ARG BUILD_DIR
+
 # install build dependencies
-WORKDIR /opt/ingrid/ingrid-geo-api/server
+WORKDIR ${BUILD_DIR}/server
 COPY ./server/package*.json ./
 RUN npm ci
 
@@ -17,33 +25,34 @@ RUN npm run build
 #
 # IMAGE: final
 #
-FROM node:20.18.1-alpine3.20 AS final
+FROM node:${NODE_TAG} AS final
 
 ARG version
 ARG commitId
 ARG buildTimestamp
+ARG BUILD_DIR
 ENV BUILD_VERSION=$version
 ENV BUILD_COMMIT_ID=$commitId
 ENV BUILD_DATE=$buildTimestamp
 ENV NODE_ENV=production
 
-# copy init
-COPY --from=building5/dumb-init:1.2.1 /dumb-init /usr/local/bin/
+# install tini
+RUN apk add --no-cache tini
 
 # install production dependencies
-WORKDIR /opt/ingrid/ingrid-geo-api/server
+WORKDIR ${BUILD_DIR}/server
 COPY --chmod=755 ./server/package*.json ./
 RUN npm run install-production
 
 # copy built files from server and client
-WORKDIR /opt/ingrid/ingrid-geo-api
-COPY --chmod=755 --from=server /opt/ingrid/ingrid-geo-api/server/dist ./server
+WORKDIR ${BUILD_DIR}
+COPY --chmod=755 --from=server ${BUILD_DIR}/server/dist ./server
 COPY --chmod=755 config.json README.md ./
 
 EXPOSE 3000
 
 USER node
 
-WORKDIR /opt/ingrid/ingrid-geo-api/server
-ENTRYPOINT ["dumb-init", "--"]
+WORKDIR ${BUILD_DIR}/server
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "server.js"]
