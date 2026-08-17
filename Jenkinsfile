@@ -4,7 +4,7 @@ pipeline {
     triggers{ cron( getCronParams() ) }
 
     environment {
-        REGISTRY = "docker-registry.wemove.com/ingrid-geo-api"
+        REGISTRY = "registry.opencode.de/informationgrid/ingrid-geo-api"
         SCANNER_HOME = tool 'SonarQube Scanner'
     }
 
@@ -115,7 +115,7 @@ pipeline {
                 echo 'Generating Software Bill of Materials (SBOM)'
 
                 script {
-                    def imageToScan = "docker-registry.wemove.com/ingrid-geo-api:${env.VERSION}"
+                    def imageToScan = "registry.opencode.de/informationgrid/ingrid-geo-api:${env.VERSION}"
                     def sbomFilename = "ingrid-geo-api-${determineVersion()}-sbom.json"
 
                     sh """
