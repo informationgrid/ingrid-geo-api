@@ -100,7 +100,7 @@ pipeline {
 
                 script {
                     def imageToScan = "registry.opencode.de/informationgrid/ingrid-geo-api:${env.VERSION}"
-                    def sbomFilename = "ingrid-geo-api-${determineVersion()}-sbom.json"
+                    def sbomFilename = "ingrid-geo-api-${determineVersion()}.sbom.json"
 
                     sh """
                         docker run --rm --pull=always --volumes-from jenkins anchore/syft:latest ${imageToScan} --output cyclonedx-json=${WORKSPACE}/build/${sbomFilename}
@@ -120,7 +120,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: '9623a365-d592-47eb-9029-a2de40453f68', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
                         sh '''
                             curl -f --user $USERNAME:$PASSWORD --upload-file build/rpms/ingrid/*.rpm https://nexus.informationgrid.eu/repository/''' + repoType + '''/
-                            curl -f --user $USERNAME:$PASSWORD --upload-file build/*-sbom.json https://nexus.informationgrid.eu/repository/''' + repoType + '''/
+                            curl -f --user $USERNAME:$PASSWORD --upload-file build/*.sbom.json https://nexus.informationgrid.eu/repository/''' + repoType + '''/
                         '''
                     }
                 }
@@ -167,7 +167,7 @@ def determineRpmReleasePart() {
         }
         return '1'
     } else {
-        return 'dev'
+        return 'SNAPSHOT'
     }
 }
 
