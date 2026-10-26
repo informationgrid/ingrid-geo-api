@@ -1,7 +1,7 @@
 #
 # VARIABLES
 #
-ARG NODE_TAG=20.19.6-alpine3.23
+ARG NODE_TAG=20-alpine
 ARG BUILD_DIR=/opt/ingrid/geo-api
 
 #
