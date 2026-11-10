@@ -16,7 +16,7 @@ pipeline {
     stages {
         stage ('Run Tests') {
             steps {
-                nodejs(nodeJSInstallationName: 'nodejs20') {
+                nodejs(nodeJSInstallationName: 'nodejs22') {
                     sh 'cd server && npm ci && npm test'
                 }
             }
