@@ -1,4 +1,11 @@
 
+## 8.5.2 (12.11.2026)
+
+### Features
+
+* Update der Geo-API auf NodeJS 22 (#9706)
+
+    
 ## 8.5.0 (07.10.2026)
 
 ### Features
